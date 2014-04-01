@@ -1,6 +1,6 @@
-# Spark Cloud Computing
+## Spark Cloud Computing
 
-## Class Definition
+### Class Definition
 - Job:
 	- id: primary key
 	- name: string
@@ -27,6 +27,6 @@
 	- Runing Job Thread Array
 	- any API needed by WebServer
 
-## Cluster
+### Cluster
 	- Three computer with Spark 0.90 and Hadoop 1.0.4
 	- each Computer with 32g mem and 6 cores 
