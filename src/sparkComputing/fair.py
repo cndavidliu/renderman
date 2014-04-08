@@ -1,8 +1,10 @@
+"""
+code used to do fairing
+"""
 from pyspark import SparkContext
 from operator import add
 import os
 import types
-objfile='data/new.obj'
 sc=SparkContext("local","Test Job")
 test_lambda=0.5
 
@@ -52,20 +54,25 @@ def fend(s):
 		head+=1
 	return s[head+1:]
 
-objdata=sc.textFile(objfile).cache()
-vertexdata=objdata.filter(lambda s : 'v ' in s)
-facedata=objdata.filter(lambda s : 'f ' in s)
-times=0
+def test():
+	objfile='data/new.obj'
+	objdata=sc.textFile(objfile).cache()
+	vertexdata=objdata.filter(lambda s : 'v ' in s)
+	facedata=objdata.filter(lambda s : 'f ' in s)
+	times=0
 
-while times<5:
-	vertexlist=vertexdata.collect()
-	newdata=facedata.map(fchange)
-	newdata=sc.parallelize(newdata.reduce(add))
-	newdata=newdata.reduceByKey(fadd)
-	vertexmap=newdata.collectAsMap()
-	vertexdata=vertexdata.map(ffinal)
-	times+=1
+	while times<5:
+		vertexlist=vertexdata.collect()
+		newdata=facedata.map(fchange)
+		newdata=sc.parallelize(newdata.reduce(add))
+		newdata=newdata.reduceByKey(fadd)
+		vertexmap=newdata.collectAsMap()
+		vertexdata=vertexdata.map(ffinal)
+		times+=1
 
-vertexdata=vertexdata.map(fend)
-result=vertexdata.union(fdata)
-result.saveAsTextFile('result')
+	vertexdata=vertexdata.map(fend)
+	result=vertexdata.union(fdata)
+	result.saveAsTextFile('result')
+
+if pass__name__=='__main__':
+	test()
