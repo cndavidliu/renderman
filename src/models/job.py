@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, Sequence, String, DateTime, ForeignKey
-from sqlalchemy.orm import relationship 
-from meta import Model
+from sqlalchemy.orm import relationship, backref
+from .meta import Model
 
 jobTypes = ['fair', 'render']
 jobStates = ['Create', 'Wait', 'Running', 'Failed', 'Success', 'Retry']
@@ -19,14 +19,14 @@ class Job(Model):
 	name = Column(String(255), nullable = False)
 	state = Column(String(255), default = 'Create')
 	sourceFile = Column(String(255), nullable = False, default = '/')
-	jobType = Column(Integer)
+	jobType = Column(Integer, default = 0)
 
 	startTime = Column(DateTime)
 	finishTime = Column(DateTime)
 	totalTime = Column(Integer, default = 0)
 
-	description = Column(String(255))
-	extraInfo = Column(String(255))
+	description = Column(String(255), default = '')
+	extraInfo = Column(String(255), default = '')
 
 	#config info
 	instanceMem = Column(Integer, default = 4)
@@ -45,3 +45,15 @@ class Job(Model):
 
 	def isFinished(self):
 		return self.state in ['Failed', 'Success']
+
+	def __init__(self, name, sourceFile, jobType = 0):
+		self.name = name
+		self.sourceFile = sourceFile
+		self.jobType = jobType
+
+	def setConfig(self, instanceMem, instanceCores):
+		self.instanceMem = instanceMem
+		self.instanceCores = instanceCores
+
+	def setTotalTime(self):
+		self.totalTime = (self.finishTime - self.startTime).seconds

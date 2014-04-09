@@ -28,12 +28,15 @@ class User(Model):
 	@password.setter
 	def setPassword(self, password):
 		if password is not None:
-			self._password = password
-
+			self._password = sha256_crypt.encrypt(password)
+			
 	def checkPassword(self, password):
 		return sha256_crypt.verify(password, self.password)
 
 	def __init__(self, name, password, email):
 		self.name = name
-		self._password = password
+		self.setPassword = password
 		self.email = email
+
+	def __repr__(self):
+		return "(User.id = %s, User.name = %s, User.email = %s)" % (self.id, self.name, self.email)

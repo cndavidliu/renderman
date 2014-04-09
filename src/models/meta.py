@@ -22,7 +22,7 @@ class Model(object):
 
 from sqlalchemy.ext.declarative import declarative_base
 
-Model = declared_base(cls = Model, name = 'Model')
+Model = declarative_base(cls = Model, name = 'Model')
 
 def init_models(database_uri):
 	"""
