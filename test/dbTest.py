@@ -46,7 +46,7 @@ getUser = models.user.User.query.filter_by(id = 1).first()
 getJob = models.job.Job.query.filter_by(id = 1).first()
 
 print "###update test result:"
-print 'user.name changed:', getUser.name == 'davis'
+print 'user.name changed:', getUser.name == 'davis', user == getUser, user.name == 'davis'
 print 'job.name changed:', getJob.name == 'updateJob', getUser.jobs[0].name == 'updateJob'
 
 #set datetime test

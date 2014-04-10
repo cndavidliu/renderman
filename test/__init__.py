@@ -1,5 +1,6 @@
 '''
-test module fo src
-'''
+test module for src
 
-from .dbTest import *
+Usage:
+python -m spark_cloud.test.dbTest | grep False
+'''

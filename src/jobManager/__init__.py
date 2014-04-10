@@ -8,3 +8,4 @@ Example usage::
 """
 
 from .jobManager import *
+from .threadManager import *

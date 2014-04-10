@@ -74,5 +74,5 @@ def test():
 	result=vertexdata.union(fdata)
 	result.saveAsTextFile('result')
 
-if pass__name__=='__main__':
+if __name__=='__main__':
 	test()
