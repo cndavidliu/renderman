@@ -35,16 +35,17 @@ class JobExcutor(Thread):
 		except BaseException, e:
 			self.__excutedJob.state = 'Retry'
 			exceptionOccured = 1
+			print e
 		global semaphore
 		semaphore.release()
 		if exceptionOccured != 1:
 			self.__excutedJob.state = 'Success'
 		sef.__excutedJob.finishTime = datetime.datetime.now()
 
-	def getCommand(self, state):
-		if state == -1:
+	def getCommand(self, jobType):
+		if jobType == -1:
 			return 'ls'
-		elif state = 1:
+		elif jobType == 1:
 			return 'fair'
 		else:
 			return 'render'
