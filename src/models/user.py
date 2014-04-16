@@ -40,3 +40,5 @@ class User(Model):
 
 	def __repr__(self):
 		return "(User.id = %s, User.name = %s, User.email = %s)" % (self.id, self.name, self.email)
+
+	@

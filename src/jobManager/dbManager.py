@@ -9,3 +9,7 @@ def updateJob(job):
 	updateJob = Job.query.filter_by(id = job.id).first()
 	updatJob = job
 	meta.db_session.commit()
+
+def insertJob(job):
+	meta.db_session.add(job)
+	meta.db_session.commit()

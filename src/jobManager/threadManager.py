@@ -2,7 +2,7 @@
 from threading import Thread, Semaphore
 from Queue import Queue
 import os
-import .dbManager
+from .dbManager import *
 import datetime
 
 semaphore = Semaphore(1)
@@ -147,16 +147,30 @@ class Dispatcher(Thread):
 		self.__retryQueue.put(job)
 
 	def submitJob(self, job):
-		if self.__jobQueue.qsize() == self.__maxStore:
-			return False
+		"""
+		the api used to submit job here is the return value's instruction:
+		-1: the waitiing Job Queue is full!
+		0: put into the waiting Job Queue
+		1: catch some other exception, such as db excetion or semaphore excetion Fail!
+		"""
 		try:
-			self.__jobQueue.put(job,1,1)
+			dbManager.insertJob(job)
+			if self.__jobQueue.qsize() == self.__maxStore:
+				return -1
+			else:
+				try:
+					job.state = 'Wait'				
+					self.__jobQueue.put(job,1,1)
+				except BaseException, e:
+					job.state = 'Create'
+					return -1
+				dbManager.updateJob(job)
 			global semaphore
 			semaphore.release()
-			return True
+			return 0
 		except BaseException, e:
 			print e
-			return False
+			return 1
 
 	@property
 	def running(self):
