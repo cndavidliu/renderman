@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, Sequence, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship, backref
 from .meta import Model
+import datetime
 
 jobTypes = ['fair', 'render']
 jobStates = ['Create', 'Wait', 'Running', 'Failed', 'Success', 'Retry']
@@ -38,6 +39,7 @@ class Job(Model):
 
 
 	def __repr__(self):
+		global jobTypes
 		return "Job.name = %s, Job.type = %s, Job.config = %s, Job.description = %s, Job.user = %s" % (self.name, jobTypes[self.jobType], self.getConfig(), self.description, self.user)
 
 	def getConfig(self):
@@ -57,3 +59,7 @@ class Job(Model):
 
 	def setTotalTime(self):
 		self.totalTime = (self.finishTime - self.startTime).seconds
+
+	def isOverTime(self):
+		now = datetime.datetime.now()
+		return self.state == 'Running' and (now - self.startTime).seconds > self.overTime

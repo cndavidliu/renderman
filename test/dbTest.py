@@ -3,6 +3,7 @@ from ..src import models
 import os
 from datetime import datetime
 from time import sleep
+from ..src.jobManager import dbManager
 # init db test
 
 def cleanDatabase():
@@ -72,5 +73,28 @@ def main():
 	print '###check password test:'
 	print getUser.password, getUser.checkPassword('123456')
 
+	#job function test
+	print getJob.created_at
+	print getJob
+	getJob.state = 'Running'
+	getJob.overTime = 1
+	print 'whether overTime:', getJob.isOverTime()
+
+
+def dbManagerTest():
+	job = models.job.Job('testJob', '/home/mfkiller/test.rc', 1)
+	dbManager.insertJob(job)
+	sleep(2)
+	anotherJob = models.job.Job('anotherJob', '/home/mfkiller/test.rc', 1)
+	dbManager.insertJob(anotherJob)
+	jobs = dbManager.selectJob(5)
+	print jobs
+	dbManager.checkJob()
+	checkJobs = dbManager.selectJob(5)
+	print checkJobs
+	# use db select sentence instead of 1
+	print 'check num:', len(checkJobs) - len(jobs) == 1
+
 if __name__ == '__main__':
 	main()
+	dbManagerTest()

@@ -2,7 +2,7 @@
 from threading import Thread, Semaphore
 from Queue import Queue
 import os
-from .dbManager import *
+from .dbManager import checkJob, insertJob, selectJob, updateJob
 import datetime
 
 semaphore = Semaphore(1)
@@ -30,7 +30,7 @@ class JobExcutor(Thread):
 		try:
 			self.__excutedJob.startTime = datetime.datetime.now()
 			self.__excutedJob.state = 'Running'
-			dbManager.updateJob(self.__excutedJob)
+			updateJob(self.__excutedJob)
 			os.system(self.getCommand(self.__excutedJob.jobType))
 		except BaseException, e:
 			self.__excutedJob.state = 'Retry'
@@ -50,11 +50,6 @@ class JobExcutor(Thread):
 		else:
 			return 'render'
 
-	def isOverTime(self):
-		now = datetime.datetime.now()
-		return (now - self.__excutedJob.startTime).seconds > self.__excutedJob.overTime
-
-
 
 class Dispatcher(Thread):
 	"""
@@ -73,6 +68,7 @@ class Dispatcher(Thread):
 		self.__failedQueue = Queue()
 		self.__retryTimes = retryTimes
 		self.__handleThreads = []
+		checkJob()
 
 
 	def run(self):
@@ -85,6 +81,10 @@ class Dispatcher(Thread):
 				print e
 
 	def dispatch(self):
+		jobCount = self.__maxStore - self.__jobQueue.qsize()
+		if jobCount > 0:
+			pushJobs = selectJob(jobCount)
+			self.addJobInBatch(pushJobs)
 		idleCount = self.getIdlePos()
 		if idleCount == 0:
 			return
@@ -94,7 +94,7 @@ class Dispatcher(Thread):
 			if excutedJob.retryTimes >= self.retryTimes:
 				excutedJob.state = 'Failed'
 				self.__failedQueue.put(excutedJob)
-				dbManager.updateJob(excutedJob)
+				updateJob(excutedJob)
 				if self.__failedQueue.qsize() > self.__failedCount:
 					print 'the failed Queue is full, too many failed job'
 			else:
@@ -122,7 +122,7 @@ class Dispatcher(Thread):
 					retryJob = self.__handleThreads[i].excutedJob
 					retryJob.retryTimes += 1
 					self.__retryQueue.put(retryJob)
-				dbManager.updateJob(retryJob)
+				updateJob(retryJob)
 				idleCount += 1
 			elif self.__handleThreads[i].isOverTime:
 				finishedThreads.append(i)
@@ -146,7 +146,19 @@ class Dispatcher(Thread):
 	def addRetryJob(self, job):
 		self.__retryQueue.put(job)
 
-	def submitJob(self, job):
+	#todo need to test
+	def addJobInBatch(self, jobs):
+		for job in jobs:
+			try:
+				job.state = 'Wait'
+				self.__jobQueue.put(job,1,1)
+			except BaseException, e:
+				job.state = 'Create'
+				break
+			updateJob(job)
+
+
+	'''def submitJob(self, job):
 		"""
 		the api used to submit job here is the return value's instruction:
 		-1: the waitiing Job Queue is full!
@@ -171,6 +183,24 @@ class Dispatcher(Thread):
 		except BaseException, e:
 			print e
 			return 1
+		'''
+	def submitJob(self, job):
+		"""
+		here just insert the job into db and release the semaphore
+		when the expection about db happends, failed
+		"""
+		try:
+			insertJob(job)
+		except BaseException, e:
+			return False
+		global semaphore
+		semaphore.release()
+		return True
+
+
+	def cleanJob(self):
+		global semaphore
+		semaphore.release()
 
 	@property
 	def running(self):
