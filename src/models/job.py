@@ -25,6 +25,7 @@ class Job(Model):
 	startTime = Column(DateTime)
 	finishTime = Column(DateTime)
 	totalTime = Column(Integer, default = 0)
+	overTime = Column(Integer, default = 1200)
 
 	description = Column(String(255), default = '')
 	extraInfo = Column(String(255), default = '')
@@ -32,6 +33,8 @@ class Job(Model):
 	#config info
 	instanceMem = Column(Integer, default = 4)
 	instanceCores = Column(Integer, default = 6)
+
+	retryTimes = Column(Integer, default = 0)
 
 	#Owner
 	user_id = Column(Integer, ForeignKey('user.id'))

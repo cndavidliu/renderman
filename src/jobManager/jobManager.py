@@ -9,13 +9,9 @@ class JobManager(object):
 	Manage job using queue and multi-threads
 	"""
 
-	def __init__(self):
+	def __init__(self, maxStore, threadCount = 3, failedCount = 2, retryCount = 10):
 		self.__running = False
-		self.__dispatcher = None
-
-	def __init__(self, maxStore = 100, threadCount = 3, failedCount = 2, retryCount = 10):
-		self.__init__()
-		self.start(maxStore, threadCount, failedCount, retryCount)
+		self.__dispatcher =  Dispatcher(self.__running, maxStore, threadCount, failedCount, retryCount)
 
 	@property
 	def running(self):
@@ -27,19 +23,21 @@ class JobManager(object):
 
 	@property
 	def dispatcher(self):
-		return this.__dispatcher
+		return self.__dispatcher
 
 	@dispatcher.setter
 	def setDispatcher(self, dispatcher):
-		this.__dispatcher = dispatcher
+		self.__dispatcher = dispatcher
 
-	def start(self, maxStore, threadCount, failedCount, retryCount):
-		if self.dispatcher is not None:
+	def start(self):
+		if self.__running:
 			return
+		if self.__dispatcher is None:
+			self.__dispatcher =  Dispatcher(self.__running, 100, 3, 2, 10)
 		self.__running = True
-		self.__dispatcher =  Dispatcher(self.__running, maxStore, threadCount, failedCount, retryCount)
+		self.__dispatcher.setRunning = True
 		self.__dispatcher.setDaemon(True)
-		sef.__dispatcher.setName('job-dispatcher')
+		self.__dispatcher.setName('job-dispatcher')
 		self.__dispatcher.start()
 
 	def stop(self):
@@ -50,6 +48,7 @@ class JobManager(object):
 
 	def disposeDispatcher(self):
 		this.__running = False
+		self.__dispatcher.setRunning = False
 		semaphore.release()
 		try:
 			this.__dispatcher.join()

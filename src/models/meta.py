@@ -28,7 +28,7 @@ def init_models(database_uri):
 	"""
 	This method must be called before using models.
 	"""
-	engine = create_engine(database_uri, convert_unicode = True)
+	engine = create_engine(database_uri, connect_args = {'check_same_thread': False}, convert_unicode = True)
 	db_session.configure(bind = engine)
 
 def init_db():

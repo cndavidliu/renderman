@@ -1,18 +1,10 @@
 # -*- coding: utf-8 -*-
 from ..src import models
-import os
 from datetime import datetime
 from time import sleep
+from .clean import cleanDatabase
 from ..src.jobManager import dbManager
 # init db test
-
-def cleanDatabase():
-	os.system('''
-		sqlite3 /home/mfkiller/code/spark_cloud/database/test.db 'drop table job'
-		''')
-	os.system('''
-		sqlite3 /home/mfkiller/code/spark_cloud/database/test.db 'drop table user'
-		''')
 
 def main():
 	cleanDatabase()
@@ -21,17 +13,17 @@ def main():
 	models.init_db()
 
 	# insert db test
-	user = models.user.User('dave', '123456', 'test@qq.com')
-	models.meta.db_session.add(user)
-	models.meta.db_session.commit()
+	user = models.User('dave', '123456', 'test@qq.com')
+	models.db_session.add(user)
+	models.db_session.commit()
 
-	job = models.job.Job('testJob', '/home/mfkiller/test.rc', 1)
+	job = models.Job('testJob', '/home/mfkiller/test.rc', 1)
 	job.user_id = user.id
-	models.meta.db_session.add(job)
-	models.meta.db_session.commit()
+	models.db_session.add(job)
+	models.db_session.commit()
 
-	getUser = models.user.User.query.filter_by(id = 1).first()
-	getJob = models.job.Job.query.filter_by(id = 1).first()
+	getUser = models.User.query.filter_by(id = 1).first()
+	getJob = models.Job.query.filter_by(id = 1).first()
 
 	print getUser
 	print "####job insert and relationship test result:"
@@ -42,10 +34,10 @@ def main():
 	# update db test
 	getJob.name = 'updateJob'
 	getUser.name = 'davis'
-	models.meta.db_session.commit()
+	models.db_session.commit()
 
-	getUser = models.user.User.query.filter_by(id = 1).first()
-	getJob = models.job.Job.query.filter_by(id = 1).first()
+	getUser = models.User.query.filter_by(id = 1).first()
+	getJob = models.Job.query.filter_by(id = 1).first()
 
 	print "###update test result:"
 	print 'user.name changed:', getUser.name == 'davis', user == getUser, user.name == 'davis'
@@ -58,14 +50,14 @@ def main():
 	finishTime = datetime.now()
 	getJob.startTime = startTime
 	getJob.finishTime = finishTime
-	models.meta.db_session.commit()
+	models.db_session.commit()
 
-	getJob = models.job.Job.query.filter_by(id = 1).first()
+	getJob = models.Job.query.filter_by(id = 1).first()
 	print getJob.startTime, getJob.finishTime
 	print getJob.startTime == startTime, getJob.finishTime == finishTime 
 	getJob.setTotalTime()
 	print getJob.totalTime == 2
-	models.meta.db_session.commit()
+	models.db_session.commit()
 	# relationship test
 
 
@@ -82,11 +74,11 @@ def main():
 
 
 def dbManagerTest():
-	job = models.job.Job('testJob', '/home/mfkiller/test.rc', 1)
-	dbManager.insertJob(job)
+	job = models.Job('testJob', '/home/mfkiller/test.rc', 1)
+	dbManager.insert(job)
 	sleep(2)
-	anotherJob = models.job.Job('anotherJob', '/home/mfkiller/test.rc', 1)
-	dbManager.insertJob(anotherJob)
+	anotherJob = models.Job('anotherJob', '/home/mfkiller/test.rc', 1)
+	dbManager.insert(anotherJob)
 	jobs = dbManager.selectJob(5)
 	print jobs
 	dbManager.checkJob()

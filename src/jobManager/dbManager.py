@@ -3,14 +3,29 @@
 some function about database here needed by jobManager
 """
 from ..models import job, meta, user
+from .config import *
 from sqlalchemy import or_
 
-def updateJob(job):
+def init():
+	meta.init_models(SQL_URL)
+	meta.init_db()
+
+def update(target, state, finished = False):
 	# need to select? need to test
+	updateJob = job.Job.query.filter_by(id = target.id).first()
+	updateJob.state = state
+	if target.state == 'Retry' and state == 'Running':
+		updateJob.retryTimes += 1
+	if finished:
+		updateJob.finishTime = target.finishTime
+	meta.db_session.commit()
+	return updateJob
+
+def commit(job):
 	meta.db_session.commit()
 
-def insertJob(job):
-	meta.db_session.add(job)
+def insert(target):
+	meta.db_session.add(target)
 	meta.db_session.commit()
 
 def selectJob(num):

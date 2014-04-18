@@ -2,10 +2,10 @@
 from threading import Thread, Semaphore
 from Queue import Queue
 import os
-from .dbManager import checkJob, insertJob, selectJob, updateJob
+from .dbManager import checkJob, insert, selectJob, update, commit
 import datetime
 
-semaphore = Semaphore(1)
+semaphore = Semaphore(0)
 
 class JobExcutor(Thread):
 	"""
@@ -29,8 +29,7 @@ class JobExcutor(Thread):
 		exceptionOccured = 0
 		try:
 			self.__excutedJob.startTime = datetime.datetime.now()
-			self.__excutedJob.state = 'Running'
-			updateJob(self.__excutedJob)
+			self.__excutedJob = update(self.__excutedJob, 'Running')
 			os.system(self.getCommand(self.__excutedJob.jobType))
 		except BaseException, e:
 			self.__excutedJob.state = 'Retry'
@@ -40,7 +39,8 @@ class JobExcutor(Thread):
 		semaphore.release()
 		if exceptionOccured != 1:
 			self.__excutedJob.state = 'Success'
-		sef.__excutedJob.finishTime = datetime.datetime.now()
+		self.__excutedJob.finishTime = datetime.datetime.now()
+		update(self.__excutedJob, self.__excutedJob.state, True)
 
 	def getCommand(self, jobType):
 		if jobType == -1:
@@ -84,6 +84,7 @@ class Dispatcher(Thread):
 		jobCount = self.__maxStore - self.__jobQueue.qsize()
 		if jobCount > 0:
 			pushJobs = selectJob(jobCount)
+			#print pushJobs
 			self.addJobInBatch(pushJobs)
 		idleCount = self.getIdlePos()
 		if idleCount == 0:
@@ -94,7 +95,7 @@ class Dispatcher(Thread):
 			if excutedJob.retryTimes >= self.retryTimes:
 				excutedJob.state = 'Failed'
 				self.__failedQueue.put(excutedJob)
-				updateJob(excutedJob)
+				update(excutedJob, excutedJob.state)
 				if self.__failedQueue.qsize() > self.__failedCount:
 					print 'the failed Queue is full, too many failed job'
 			else:
@@ -113,18 +114,16 @@ class Dispatcher(Thread):
 			idleCount -= 1
 
 	def getIdlePos(self):
-		idleCount = self.__threadCount - len(handleThreads)
+		idleCount = self.__threadCount - len(self.__handleThreads)
 		finishedThreads = []
 		for i in xrange(len(self.__handleThreads)):
 			if not self.__handleThreads[i].isAlive():
 				finishedThreads.append(i)
 				if self.__handleThreads[i].excutedJob.state == 'Retry':
 					retryJob = self.__handleThreads[i].excutedJob
-					retryJob.retryTimes += 1
 					self.__retryQueue.put(retryJob)
-				updateJob(retryJob)
 				idleCount += 1
-			elif self.__handleThreads[i].isOverTime:
+			elif self.__handleThreads[i].excutedJob.isOverTime():
 				finishedThreads.append(i)
 				self.__handleThreads[i].retry()
 				self.__handleThreads[i].join()
@@ -134,10 +133,10 @@ class Dispatcher(Thread):
 		return idleCount
 	
 	def excuteJob(self, job):
-		if len(handleThreads) == maxStore:
+		if len(self.__handleThreads) == self.__maxStore:
 			return False
-		handleThreads.append(JobExcutor(job))
-		handleThreads[-1].start()
+		self.__handleThreads.append(JobExcutor(job))
+		self.__handleThreads[-1].start()
 		return True
 
 	def addFailedJob(self, job):
@@ -155,7 +154,7 @@ class Dispatcher(Thread):
 			except BaseException, e:
 				job.state = 'Create'
 				break
-			updateJob(job)
+			commit(job)
 
 
 	'''def submitJob(self, job):
@@ -166,7 +165,7 @@ class Dispatcher(Thread):
 		1: catch some other exception, such as db excetion or semaphore excetion Fail!
 		"""
 		try:
-			dbManager.insertJob(job)
+			dbManager.insert(job)
 			if self.__jobQueue.qsize() == self.__maxStore:
 				return -1
 			else:
@@ -176,7 +175,7 @@ class Dispatcher(Thread):
 				except BaseException, e:
 					job.state = 'Create'
 					return -1
-				dbManager.updateJob(job)
+				dbManager.update(job)
 			global semaphore
 			semaphore.release()
 			return 0
@@ -190,7 +189,7 @@ class Dispatcher(Thread):
 		when the expection about db happends, failed
 		"""
 		try:
-			insertJob(job)
+			insert(job)
 		except BaseException, e:
 			return False
 		global semaphore
