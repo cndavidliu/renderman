@@ -35,12 +35,12 @@ class JobExcutor(Thread):
 			self.__excutedJob.state = 'Retry'
 			exceptionOccured = 1
 			print e
-		global semaphore
-		semaphore.release()
 		if exceptionOccured != 1:
 			self.__excutedJob.state = 'Success'
 		self.__excutedJob.finishTime = datetime.datetime.now()
 		update(self.__excutedJob, self.__excutedJob.state, True)
+		global semaphore
+		semaphore.release()
 
 	def getCommand(self, jobType):
 		if jobType == -1:
@@ -48,7 +48,7 @@ class JobExcutor(Thread):
 		elif jobType == 1:
 			return 'fair'
 		else:
-			return 'render'
+			return 'python /home/mfkiller/code/src/cloudComputing/main.py'
 
 
 class Dispatcher(Thread):
@@ -118,18 +118,20 @@ class Dispatcher(Thread):
 		finishedThreads = []
 		for i in xrange(len(self.__handleThreads)):
 			if not self.__handleThreads[i].isAlive():
-				finishedThreads.append(i)
 				if self.__handleThreads[i].excutedJob.state == 'Retry':
 					retryJob = self.__handleThreads[i].excutedJob
 					self.__retryQueue.put(retryJob)
+				finishedThreads.append(self.__handleThreads[i])
 				idleCount += 1
 			elif self.__handleThreads[i].excutedJob.isOverTime():
-				finishedThreads.append(i)
-				self.__handleThreads[i].retry()
+				self.__handleThreads[i].excutedJob[i].excutedJob.finishTime = datetime.datetime.now()
+				retryJob = update(self.__handleThreads[i].excutedJob, 'Retry', True)
+				self.__retryQueue.put(retryJob)
 				self.__handleThreads[i].join()
+				finishedThreads.append(self.__handleThreads[i])
 				idleCount += 1
-		for index in finishedThreads:
-			del self.__handleThreads[i]
+		for finishedThread in finishedThreads:
+			self.__handleThreads.remove(finishedThread)
 		return idleCount
 	
 	def excuteJob(self, job):

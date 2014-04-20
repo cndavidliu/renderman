@@ -14,10 +14,14 @@ def update(target, state, finished = False):
 	# need to select? need to test
 	updateJob = job.Job.query.filter_by(id = target.id).first()
 	updateJob.state = state
-	if target.state == 'Retry' and state == 'Running':
-		updateJob.retryTimes += 1
+	if state == 'Running':
+		updateJob.startTime = target.startTime
+		if target.state == 'Retry':
+			updateJob.retryTimes += 1
 	if finished:
 		updateJob.finishTime = target.finishTime
+		print updateJob.finishTime, updateJob.startTime
+		updateJob.setTotalTime()
 	meta.db_session.commit()
 	return updateJob
 
@@ -34,7 +38,8 @@ def selectJob(num):
 	return jobs
 
 def checkJob():
-	jobs = job.Job.query.filter(or_(job.Job.state == 'Create', job.Job.state == 'Wait', job.Job.state == 'Running'))\
+	jobs = job.Job.query.filter(or_(job.Job.state == 'Create', job.Job.state == 'Wait', \
+		job.Job.state == 'Running', job.Job.state == 'Retry' ))\
 	           .order_by(job.Job.created_at).all()
 	for updateJob in jobs:
 		updateJob.state = job.jobStates[0]

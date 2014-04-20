@@ -65,4 +65,6 @@ class Job(Model):
 
 	def isOverTime(self):
 		now = datetime.datetime.now()
-		return self.state == 'Running' and (now - self.startTime).seconds > self.overTime
+		if self.state == 'Running':
+			return (now - self.startTime).seconds > self.overTime
+		return False
