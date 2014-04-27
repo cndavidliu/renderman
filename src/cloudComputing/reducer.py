@@ -1,41 +1,44 @@
-"""
-reduce python code used to handle rendering reduce 
-"""
-
+#! /usr/bin/env python
 import sys
 import Image
 import os
+from config import hdfsFolder
 
-jobName = os.environ["jobName"]
-width = os.environ["width"]
-height = os.environ["height"]
-mapTaskCount = os.environ["mapTaskCount"]
+'''
+reduce python code used to handle rendering reduce 
+'''
+'''
+jobName = os.environ['jobName']
+width = int(os.environ['width'])
+height = int(os.environ['height'])
+mapTaskCount = int(os.environ['mapTaskCount'])
+'''
 
-"""
 jobName = sys.argv[1]
-width = sys.argv[2]
-height = sys.argv[3]
-mapTaskCount = sys.argv[4]
-"""
+width = int(sys.argv[2])
+height = int(sys.argv[3])
+mapTaskCount = int(sys.argv[4])
 
-srcFile = jobName + config.fileSuffix
+os.system("mkdir " +  hdfsFolder + jobName + "-output")
 
-os.system("mkdir " + jobName)
-
+resultInfo = []
+# here used to test
+#lines = ['output_000.png', 'output_001.png']
+#for line in lines:
 for line in sys.stdin:
 	line = line.strip()
 	resultInfo.append(line)
-	os.system("hadoop fs -get " + jobName + "/img/" + line + " ./" + jobName + "/")
+	os.system("$HADOOP_HOME/bin/hadoop fs -get " + jobName + "/img/" + line + " " + hdfsFolder + jobName + "-output/")
 
 resultInfo.sort()
 renderImg = Image.new('RGB', (width, height))
-box = (0, 0, width, height / mapTaskCount)
 
 for i in xrange(mapTaskCount):
-	partImage = Image.open("./" + jobName + "/" + resultInfo[i])
+	partImage = Image.open(hdfsFolder + jobName + "-output/" + resultInfo[i])
 	partBox = (0, i * height / mapTaskCount, width, (i + 1) * height / mapTaskCount)
-	partRegion = partImage.crop(box)
+	partRegion = partImage.crop(partBox)
 	renderImg.paste(partRegion, partBox)
 
-renderImg.save(jobName + "/result.png")
-os.system("hadoop fs -put " + jobName + "/result.png " + jobName + "/img")
+renderImg.save(hdfsFolder + jobName + "-output/result.png")
+os.system("$HADOOP_HOME/bin/hadoop fs -put " + hdfsFolder + jobName + "-output/result.png " + jobName + "/img")
+os.system("rm -rf " + hdfsFolder + jobName + "-output")

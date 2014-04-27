@@ -1,5 +1,9 @@
 '''
 module to do cloud computing job
+
+Usage:
+-----------------------------------
+
 '''
 
 #from .fair import *

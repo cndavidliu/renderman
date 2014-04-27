@@ -1,9 +1,12 @@
-"""
+'''
 some configs for hadoop and spark
-"""
+'''
 
-prefixFilePath = '/home/mfkiller/code/spark_cloud/static/'
 handleFileName = 'segmentInfo'
-mapperFilePath = '/home/mfkiller/code/spark_cloud/src/spark_cloud/mapper.py'
-reducerFilePath = '/home/mfkiller/code/spark_cloud/src/spark_cloud/reducer.py'
-fileSuffix = '.zip'
+mapperFilePath = '/home/mfkiller/code/spark_cloud/src/cloudComputing/mapper.py'
+reducerFilePath = '/home/mfkiller/code/spark_cloud/src/cloudComputing/reducer.py'
+configFilePath = '/home/mfkiller/code/spark_cloud/src/cloudComputing/config.py'
+
+fileSuffix = '.pov'
+hdfsFolder = '/home/mfkiller/code/spark_cloud/hdfs/'
+serverFolder = '/home/mfkiller/code/spark_cloud/static/'
