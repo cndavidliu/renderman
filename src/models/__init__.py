@@ -11,3 +11,4 @@ Example usage::
 from .meta import *
 from .job import *
 from .user import *
+from .config import *

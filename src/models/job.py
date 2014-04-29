@@ -30,11 +30,7 @@ class Job(Model):
 	description = Column(String(255), default = '')
 	extraInfo = Column(String(255), default = '')
 
-	#config info
-	instanceMem = Column(Integer, default = 4)
-	instanceCores = Column(Integer, default = 6)
-
-	retryTimes = Column(Integer, default = 0)
+	retryTimes = Column(Integer, default = 3)
 
 	#Owner
 	user_id = Column(Integer, ForeignKey('user.id'))
@@ -43,22 +39,21 @@ class Job(Model):
 
 	def __repr__(self):
 		global jobTypes
-		return "Job.name = %s, Job.type = %s, Job.config = %s, Job.description = %s, Job.user = %s" % (self.name, jobTypes[self.jobType], self.getConfig(), self.description, self.user)
-
-	def getConfig(self):
-		return self.instanceMem, self.instanceCores
+		return "Job.name = %s, Job.type = %s, Job.description = %s, Job.user = %s, Job.config = %s" %\
+		 (self.name, jobTypes[self.jobType], self.description, self.user, self.getConfig())
 
 	def isFinished(self):
 		return self.state in ['Failed', 'Success']
 
-	def __init__(self, name, sourceFile, jobType = 0):
+	def getConfig(self):
+		if len(self.configs) == 0:
+			return None
+		return self.configs[-1]
+
+	def __init__(self, name, sourceFile, jobType = -1):
 		self.name = name
 		self.sourceFile = sourceFile
 		self.jobType = jobType
-
-	def setConfig(self, instanceMem, instanceCores):
-		self.instanceMem = instanceMem
-		self.instanceCores = instanceCores
 
 	def setTotalTime(self):
 		self.totalTime = (self.finishTime - self.startTime).seconds

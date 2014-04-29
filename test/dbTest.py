@@ -72,9 +72,21 @@ def main():
 	getJob.overTime = 1
 	print 'whether overTime:', getJob.isOverTime()
 
+	##config module test
+	jobConfig = models.Config(1)
+	models.db_session.add(jobConfig)
+	models.db_session.commit()
+	getJob = models.Job.query.filter_by(id = 1).first()
+	print 'config check result:', jobConfig == getJob.getConfig()
+	jobConfig.setRenderConfig(2, 640, 960)
+	print jobConfig.getRenderConfig()
+	models.db_session.commit()
+	print getJob.getConfig().getRenderConfig()
+
 
 def dbManagerTest():
 	job = models.Job('testJob', '/home/mfkiller/test.rc', 1)
+	job.user_id = 1
 	dbManager.insert(job)
 	sleep(2)
 	anotherJob = models.Job('anotherJob', '/home/mfkiller/test.rc', 1)
@@ -87,6 +99,11 @@ def dbManagerTest():
 	# use db select sentence instead of 1
 	print 'check num:', len(checkJobs) - len(jobs) == 1
 
+def jobsOrderTest():
+	getUser = models.User.query.filter_by(id = 1).first()
+	print 'jobsOrderTest:', getUser.jobs[0].id == 1
+
 if __name__ == '__main__':
 	main()
 	dbManagerTest()
+	jobsOrderTest()

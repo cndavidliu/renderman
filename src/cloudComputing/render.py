@@ -31,7 +31,8 @@ os.system('hadoop fs -put ' + handleFilePath + ' ' + jobName)
 os.system('hadoop fs -put ' + srcFile + ' ' + jobName + '/')
 '''
 hadoopCommand = ("$HADOOP_HOME/bin/hadoop jar $HADOOP_HOME/contrib/streaming/hadoop-streaming-1.0.4.jar \
--D mapred.map.tasks=%d -input %s/%s -output %s/output \
+-D mapred.map.tasks=%d -D mapred.reduce.tasks=1 \
+-input %s/%s -output %s/output \
 -file %s -file %s -mapper %s -file %s -reducer %s \
 -cmdenv jobName=%s -cmdenv width=%s \
 -cmdenv height=%s -cmdenv mapTaskCount=%d" ) % \
@@ -40,7 +41,8 @@ hadoopCommand = ("$HADOOP_HOME/bin/hadoop jar $HADOOP_HOME/contrib/streaming/had
 '''
 
 hadoopCommand = ("$HADOOP_HOME/bin/hadoop jar $HADOOP_HOME/contrib/streaming/hadoop-streaming-1.0.4.jar \
--D mapred.map.tasks=%d -input %s/%s -output %s/output \
+-D mapred.map.tasks=%d -D mapred.reduce.tasks=1 \
+-input %s/%s -output %s/output \
 -file %s -file %s -mapper '%s %s %s %s' -file %s -reducer '%s %s %s %s %d'") % \
 (mapTaskCount, jobName, config.handleFileName, jobName, config.configFilePath, config.mapperFilePath, config.mapperFilePath, \
 	jobName, width, height, config.reducerFilePath, config.reducerFilePath, jobName, width, height, mapTaskCount)
