@@ -4,8 +4,10 @@ from Queue import Queue
 import os
 from .dbManager import checkJob, insert, selectJob, update, commit
 import datetime
+from ..cloudComputing import config
 
 semaphore = Semaphore(0)
+logKeyWord = ['complete', 'complete']
 
 class JobExcutor(Thread):
 	"""
@@ -28,27 +30,53 @@ class JobExcutor(Thread):
 	def run(self):
 		exceptionOccured = 0
 		try:
+			self.rmLog()
 			self.__excutedJob.startTime = datetime.datetime.now()
 			self.__excutedJob = update(self.__excutedJob, 'Running')
 			os.system(self.getCommand(self.__excutedJob.jobType))
+			self.__excutedJob.finishTime = datetime.datetime.now()
 		except BaseException, e:
-			self.__excutedJob.state = 'Retry'
 			exceptionOccured = 1
 			print e
-		if exceptionOccured != 1:
+		if exceptionOccured != 1 and self.detectLog(self.__excutedJob.jobType):
+			self.rmLog()
 			self.__excutedJob.state = 'Success'
-		self.__excutedJob.finishTime = datetime.datetime.now()
+		else:
+			self.__excutedJob.state = 'Retry'
 		update(self.__excutedJob, self.__excutedJob.state, True)
 		global semaphore
 		semaphore.release()
 
 	def getCommand(self, jobType):
+		command = ''
 		if jobType == -1:
-			return 'ls'
+			command = command + 'ls -l'
+			return command
 		elif jobType == 1:
-			return 'fair'
-		else:
-			return 'python /home/mfkiller/code/src/cloudComputing/main.py'
+			command = command + 'fair'
+			return command
+		elif jobType == 0:
+			jobName = self.getJobName()
+			#print self.__excutedJob.getConfig()
+			mapTaskCount = self.__excutedJob.getConfig().mapTaskCount
+			height = self.__excutedJob.getConfig().height
+			width = self.__excutedJob.getConfig().width
+			command = "python /home/mfkiller/code/spark_cloud/src/cloudComputing/render.py %s %d %d %d" % \
+			(jobName, mapTaskCount, width, height)
+			return command
+
+	def getJobName(self):
+		return self.__excutedJob.name + '-' + str(self.__excutedJob.id)
+
+	def rmLog(self):
+		os.system('rm -f ' + config.logFolder + self.getJobName() + '.log >/dev/null 2>&1')
+
+	def detectLog(self, jobType):
+		"""
+		use log detection to check job state need to change or fix
+		"""
+		global logKeyWord
+		return True
 
 
 class Dispatcher(Thread):
@@ -158,40 +186,16 @@ class Dispatcher(Thread):
 				break
 			commit(job)
 
-
-	'''def submitJob(self, job):
-		"""
-		the api used to submit job here is the return value's instruction:
-		-1: the waitiing Job Queue is full!
-		0: put into the waiting Job Queue
-		1: catch some other exception, such as db excetion or semaphore excetion Fail!
-		"""
-		try:
-			dbManager.insert(job)
-			if self.__jobQueue.qsize() == self.__maxStore:
-				return -1
-			else:
-				try:
-					job.state = 'Wait'				
-					self.__jobQueue.put(job,1,1)
-				except BaseException, e:
-					job.state = 'Create'
-					return -1
-				dbManager.update(job)
-			global semaphore
-			semaphore.release()
-			return 0
-		except BaseException, e:
-			print e
-			return 1
-		'''
-	def submitJob(self, job):
+	def submitJob(self, job, jobConfig = None):
 		"""
 		here just insert the job into db and release the semaphore
 		when the expection about db happends, failed
 		"""
 		try:
 			insert(job)
+			if jobConfig is not None:
+				jobConfig.job_id = job.id
+				insert(jobConfig)
 		except BaseException, e:
 			return False
 		global semaphore
@@ -282,3 +286,31 @@ class Dispatcher(Thread):
 	@handleThreads.setter
 	def setHandleThreads(self, handleThreads):
 		self.__handleThreads = handleThreads
+
+	'''
+	def submitJob(self, job):
+		"""
+		the api used to submit job here is the return value's instruction:
+		-1: the waitiing Job Queue is full!
+		0: put into the waiting Job Queue
+		1: catch some other exception, such as db excetion or semaphore excetion Fail!
+		"""
+		try:
+			dbManager.insert(job)
+			if self.__jobQueue.qsize() == self.__maxStore:
+				return -1
+			else:
+				try:
+					job.state = 'Wait'				
+					self.__jobQueue.put(job,1,1)
+				except BaseException, e:
+					job.state = 'Create'
+					return -1
+				dbManager.update(job)
+			global semaphore
+			semaphore.release()
+			return 0
+		except BaseException, e:
+			print e
+			return 1
+		'''

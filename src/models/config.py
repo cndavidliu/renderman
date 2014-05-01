@@ -38,7 +38,6 @@ class Config(Model):
 		self.width = width
 		self.height = height
 
-	def __init__(self, jobId, instanceMem = 200, instanceCores = 6):
-		self.job_id = jobId
+	def __init__(self, instanceMem = 200, instanceCores = 6):
 		self.instanceMem = instanceMem
 		self.instanceCores = instanceCores

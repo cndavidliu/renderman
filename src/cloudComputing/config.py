@@ -10,3 +10,5 @@ configFilePath = '/home/mfkiller/code/spark_cloud/src/cloudComputing/config.py'
 fileSuffix = '.pov'
 hdfsFolder = '/home/mfkiller/code/spark_cloud/hdfs/'
 serverFolder = '/home/mfkiller/code/spark_cloud/static/'
+
+logFolder = '/home/mfkiller/code/spark_cloud/logs/'

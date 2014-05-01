@@ -1,4 +1,4 @@
-### the folder used to manager hadoop files
+### the folder used to manage hadoop files
 
 - jobName + jobID + '-input'
 - jobName + jobID

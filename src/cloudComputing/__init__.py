@@ -3,7 +3,7 @@ module to do cloud computing job
 
 Usage:
 -----------------------------------
-
+python render.py jobName mapTaskCount width height
 '''
 
 #from .fair import *

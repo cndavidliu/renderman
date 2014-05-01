@@ -20,7 +20,7 @@ def update(target, state, finished = False):
 			updateJob.retryTimes += 1
 	if finished:
 		updateJob.finishTime = target.finishTime
-		print updateJob.finishTime, updateJob.startTime
+		#print updateJob.finishTime, updateJob.startTime
 		updateJob.setTotalTime()
 	meta.db_session.commit()
 	return updateJob

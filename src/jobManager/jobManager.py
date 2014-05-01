@@ -55,5 +55,5 @@ class JobManager(object):
 		except BaseException, e:
 			print e
 
-	def submitJob(self, job):
-		return self.__dispatcher.submitJob(job)
+	def submitJob(self, job, jobConfig = None):
+		return self.__dispatcher.submitJob(job, jobConfig)

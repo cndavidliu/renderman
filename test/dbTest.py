@@ -73,7 +73,8 @@ def main():
 	print 'whether overTime:', getJob.isOverTime()
 
 	##config module test
-	jobConfig = models.Config(1)
+	jobConfig = models.Config()
+	jobConfig.job_id = 1
 	models.db_session.add(jobConfig)
 	models.db_session.commit()
 	getJob = models.Job.query.filter_by(id = 1).first()
