@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, Sequence, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.hybrid import hybrid_property
+import re
 
 from passlib.hash import sha256_crypt
 
@@ -40,3 +41,24 @@ class User(Model):
 
 	def __repr__(self):
 		return "(User.id = %s, User.name = %s, User.email = %s)" % (self.id, self.name, self.email)
+
+	@staticmethod
+	def judgeName(userName):
+		if len(userName) < 4 or len(userName) > 10:
+			return False
+		else:
+			for i in xrange(0, len(userName)):
+				if (userName[i] >= 'a' and userName[i] <= 'z') or (userName[i] >= 'A' and userName[i] <= 'Z') or (userName[i] >= '0' and userName[i] <= '9'):
+					pass
+				else:
+					return False
+			return True
+
+	@staticmethod
+	def judgePassword(userPassword):
+		isReasonable = (len(userPassword) >= 6 and len(userPassword) <= 12)
+		return isReasonable
+
+	@staticmethod
+	def judgeEmail(userEmail):
+		return re.match("^.+\\@(\\[?)[a-zA-Z0-9\\-\\.]+\\.([a-zA-Z]{2,3}|[0-9]{1,3})(\\]?)$", userEmail)

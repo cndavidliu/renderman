@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship, backref
 from .meta import Model
 import datetime
 
-jobTypes = ['fair', 'render']
+jobTypes = ['render', 'fair']
 jobStates = ['Create', 'Wait', 'Running', 'Failed', 'Success', 'Retry']
 
 class Job(Model):
@@ -30,7 +30,7 @@ class Job(Model):
 	description = Column(String(255), default = '')
 	extraInfo = Column(String(255), default = '')
 
-	retryTimes = Column(Integer, default = 3)
+	retryTimes = Column(Integer, default = 0)
 
 	#Owner
 	user_id = Column(Integer, ForeignKey('user.id'))

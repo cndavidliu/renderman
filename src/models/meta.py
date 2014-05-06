@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
-from sqlalchemy import create_engine, Column, DateTime
+from sqlalchemy import create_engine, Column, DateTime, or_
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import sessionmaker, scoped_session
 

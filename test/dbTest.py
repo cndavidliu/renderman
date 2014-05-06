@@ -4,6 +4,7 @@ from datetime import datetime
 from time import sleep
 from .clean import cleanDatabase
 from ..src.jobManager import dbManager
+from sqlalchemy import or_
 # init db test
 
 def main():
@@ -84,6 +85,9 @@ def main():
 	models.db_session.commit()
 	print getJob.getConfig().getRenderConfig()
 
+	users =  models.User.query.filter(or_(models.User.name == 'test', models.User.email == 'test')).all()
+	print users
+
 
 def dbManagerTest():
 	job = models.Job('testJob', '/home/mfkiller/test.rc', 1)
@@ -104,7 +108,13 @@ def jobsOrderTest():
 	getUser = models.User.query.filter_by(id = 1).first()
 	print 'jobsOrderTest:', getUser.jobs[0].id == 1
 
+def userFunctionTest():
+	print models.User.judgeEmail("test")
+	print models.User.judgeName("mfkiller")
+	print models.User.judgePassword("1111")
+
 if __name__ == '__main__':
 	main()
 	dbManagerTest()
 	jobsOrderTest()
+	userFunctionTest()
