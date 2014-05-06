@@ -1,0 +1,18 @@
+:focus{outline:0;}
+.clear{clear:both;}
+
+/*公用版块*/
+.fr{float:right;display:inline;}
+.fl{float:left;display:inline;}
+.br10{-moz-border-radius:10px;-webkit-border-radius:10px;border-radius:10px;}
+
+.hjy-footer{width:950px; margin:20px auto; color:#666; border-top:1px solid #e5e5e5; padding:10px 0; }
+.hjy-footer a{color:#666;margin:0 10px;}
+.hjy-footer a:hover{color:#333;}
+
+.index-item-banner{ width:950px; margin:0 auto; }
+.index-item-intro{ width:934px;margin:10px auto; border: 1px solid #E5E5E5; padding:8px;}
+
+.index-item-bottom{ background:url(../img/index-bottom.png) no-repeat; font-size:14px; color:#666; width:950px; height:88px;border: 1px solid #E5E5E5; margin:0 auto; }
+.index-item-bottom p{ margin: 13px 10px 0 130px; }
+.index-item-bottom p .light{ color:#42bbe8; font-weight:bold;}

@@ -1,0 +1,74 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+	<meta http-equiv="Content-Type" content = "text/html; charset=UTF-8">
+	<link rel="stylesheet" type="text/css" href="{{url_for('static', filename = 'css/bootstrap.min.css')}}">
+  <link rel="stylesheet" type="text/css" href="{{url_for('static', filename = 'css/dashboard.css')}}">
+	<script src="{{url_for('static', filename = 'js/bootstrap.min.js')}}" type="text/javascript"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script> 
+	<title> Cloud Computing </title>
+</head>
+<body>
+  <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <a class="navbar-brand" href="{{url_for('home')}}">Cloud Computing</a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav navbar-left">
+          <li><a href="{{url_for('home')}}">Home Page</a></li>
+          {% if userName %}
+          <li><a href="#">Information Center</a></li>
+          <li class = "active"><a href="{{url_for('projectCenter')}}">Project Center</a></li> 
+          {% endif %}
+          <li><a href="http://www.yquan.org">About</a></li> 
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+          {% if userName %}
+          <li><a href="#">{{ userName }}</a></li>
+          <li><a href="{{url_for('logout')}}">Logout</a></li>
+          {% else %}
+          <li><a href="{{url_for('login')}}">Login</a></li>
+          <li><a href="{{url_for('register')}}">Register</a></li>
+          {% endif %}
+        </ul>
+        <form class="navbar-form navbar-right">
+          <input type="text" class="form-control" placeholder="Search...">
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-sm-3 col-md-2 sidebar">
+        <ul class="nav nav-sidebar">
+          <li class="active"><a href="{{url_for('projectCenter')}}">ProjectCenter</a></li>
+          <li><a href="{{url_for('createProject')}}">Create Project</a></li>
+          <li><a href="#">Running Projects</a></li>
+          <li><a href="#">History Projects</a></li>
+        </ul>
+        <ul class="nav nav-sidebar">
+          <li><a href="">InformationCenter</a></li>
+          <li><a href="">Show Information</a></li>
+          <li><a href="">Edit Information</a></li>
+          <li><a href="">Change Password</a></li>
+        </ul>
+        <ul class="nav nav-sidebar">
+          <li><a href="http://www.yquan.org">About</a></li>
+          <li><a href="https://github.com/mfmelody/spark_cloud">Project Page</a></li>
+          <li><a href="{{url_for('home')}}">Home Page</a></li>
+        </ul>
+      </div>  
+      <div class = "col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+        <div class="row">
+          <ul class="nav nav-pills">
+            <li class="active"><a href="{{url_for('projectCenter')}}">Projects <span class="badge">42</span></a></li>
+            <li><a href="#">Running <span class="badge">39</span></a></li>
+            <li><a href="#">Finished <span class="badge">3</span></a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
