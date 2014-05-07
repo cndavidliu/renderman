@@ -2,8 +2,9 @@ from flask import Flask
 from flask import abort, redirect, url_for, request, render_template, session
 from sqlalchemy import or_
 from werkzeug.utils import secure_filename
+import os
 
-from .config import SERVER_IP, DATABASE_URL, mapTaskCounts, pixels, maxStore, threadCount, failedCount, retryCount, ALLOWED_EXTENSIONS
+from .config import SERVER_IP, DATABASE_URL, mapTaskCounts, pixels, maxStore, threadCount, failedCount, retryCount, ALLOWED_EXTENSIONS, serverFolder, redirectCommand
 from .models import meta, user, job, config
 from ..test.clean import cleanDatabase
 from .jobManager import jobManager, dbManager
@@ -23,9 +24,19 @@ def init():
 	manager = jobManager.JobManager(maxStore, threadCount, failedCount, retryCount)
 
 def checkFile(filename):
-	return '.' in filename and \
-           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+	if '.' in filename:
+		fileSuffix = filename.rsplit('.', 1)[1]
+		if fileSuffix in ALLOWED_EXTENSIONS:
+			return fileSuffix
+	return None
 
+
+def getPixel(pixel):
+	strPixels = pixel.split('x')
+	intPixel = []
+	for strPixel in strPixels:
+		intPixel.append(int(strPixel.strip()))
+	return intPixel
 
 @app.route('/login', methods = ['GET', 'POST'])
 def login():
@@ -111,6 +122,7 @@ def register():
 			return render_template('register.html', ages = ages, errorMessage = errorMessage, modifyPassword = modifyPassword, name = userName, email = userEmail, \
 				password = userPassword, age = registerUser.age, sex = registerUser.sex)
 		else:
+			os.system('mkdir ' + serverFolder + userName + redirectCommand)
 			dbManager.insert(registerUser)
 			global isRegisterSuccess
 			isRegisterSuccess = True
@@ -123,7 +135,7 @@ def home():
 	userId = None
 	if 'username' in session:
 		userName = session['username']
-		userId = session['userid']
+		userId = int(session['userid'])
 	return render_template('home.html', userName = userName, userId = userId)
 
 @app.route('/logout')
@@ -138,7 +150,7 @@ def projectCenter():
 	if 'userid' not in session:
 		return redirect(url_for('login'))
 	userName = session['username']
-	userId = session['userid']
+	userId = int(session['userid'])
 	return render_template('projectCenter.html', userName = userName, userId = userId)
 
 @app.route('/createProject', methods = ['GET', 'POST'])
@@ -146,13 +158,14 @@ def createProject():
 	if 'userid' not in session:
 		return redirect(url_for('login'))
 	userName = session['username']
-	userId = session['userid']
+	userId = int(session['userid'])
 	if request.method == 'GET':
 		return render_template('createProject.html', userName = userName, userId = userId, mapTaskCounts = mapTaskCounts, pixels = pixels)
 	if request.method == 'POST':
 		jobName = ''
 		sourceFile = None
 		description = ''
+		jobType = int(request.form['jobType'])
 		errorMessage = ['', '']
 		flag = False
 		if 'jobName' in request.form:
@@ -165,24 +178,39 @@ def createProject():
 		elif len(jobName) < 4 or len(jobName) > 12:
 			errorMessage[0] = "The  length of jobName is illegal!"
 			flag = True
+		else:
+			jobs =  job.Job.query.filter(or_(job.Job.name == jobName, job.Job.jobType == jobType, job.Job.user_id == userId)).all()
+			if len(jobs) != 0:
+				flag = True
+				errorMessage[0] = 'You have used this name in this kind of job!'
 		if 'file' in request.files:
 			sourceFile = request.files['file']
 		if  not sourceFile:
 			errorMessage[1] = "Source file is necessary!"
 			flag = True
-		elif not checkFile(sourceFile.filename):
-			errorMessage[1] = "Source file's type is illegal!"
-			flag = True
+		else: 
+			fileSuffix = checkFile(sourceFile.filename)
+			if not fileSuffix:
+				errorMessage[1] = "Source file's type is illegal!"
+				flag = True
 		if flag:		
 			return render_template('createProject.html', userName = userName, userId = userId, jobName = jobName, description = description, \
-				jobType = int(request.form['jobType']), mapTaskCount = int(request.form['mapTaskCount']), pixel = request.form['pixel'], \
+				jobType = jobType, mapTaskCount = int(request.form['mapTaskCount']), pixel = request.form['pixel'], \
 				mapTaskCounts = mapTaskCounts, pixels = pixels, errorMessage = errorMessage)
 		else:
-			jobType = int(request.form['jobType'])
-			newJob = job.Job()
-			jobConfig = config.Config(int(request.form['memory']), int(request.form['cores']))
+			newJob = job.Job(jobName, sourceFile.filename, jobType)
+			newJob.user_id = userId
+			sourceFilePath = serverFolder + userName + '/' + newJob.getJobName() + '.' + fileSuffix
+			newJob.sourceFile = sourceFilePath
+			sourceFile.save(sourceFilePath)
+			#jobConfig = config.Config(int(request.form['memory']), int(request.form['cores']))
+			jobConfig = config.Config()
 			if jobType == 0:
-				jobConfig.setRenderConfig()
+				pixelInfo = getPixel(request.form['pixel'])
+				jobConfig.setRenderConfig(int(request.form['mapTaskCount']), pixelInfo[0], pixelInfo[1])
+			# submit job
+			global manager
+			manager.submitJob(newJob, jobConfig)
 			return redirect(url_for('projectCenter'))
 
 

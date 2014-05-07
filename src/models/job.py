@@ -63,3 +63,7 @@ class Job(Model):
 		if self.state == 'Running':
 			return (now - self.startTime).seconds > self.overTime
 		return False
+
+	def getJobName(self):
+		global jobTypes
+		return jobTypes[self.jobType] + '_' + self.name + '-' + str(self.user_id)

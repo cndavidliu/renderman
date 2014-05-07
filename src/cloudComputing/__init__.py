@@ -10,3 +10,4 @@ python render.py jobName mapTaskCount width height
 #from .rener import *
 #from .mapper import *
 #from .reducer import *
+from .config import *

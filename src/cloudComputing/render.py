@@ -12,8 +12,8 @@ jobName = sys.argv[1]
 mapTaskCount = int(sys.argv[2])
 width = sys.argv[3]
 height = sys.argv[4]
+srcFile = sys.argv[5]
 
-srcFile = config.serverFolder + jobName + config.fileSuffix
 logFile = config.logFolder + jobName + '.log'
 redirectCommand = '>' + logFile + ' 2>&1'
 

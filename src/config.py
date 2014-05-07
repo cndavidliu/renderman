@@ -17,5 +17,7 @@ failedCount = 2
 retryCount = 2
 
 # upload file config
-ALLOWED_EXTENSIONS = set(['zip','tar'])
-UPLOAD_FLODER = '/home/mfkiller/code/static/'
+ALLOWED_EXTENSIONS = set(['zip', '.pov'])
+serverFolder = '/home/mfkiller/code/spark_cloud/static/'
+
+redirectCommand = " >/dev/null 2>&1"

@@ -56,20 +56,18 @@ class JobExcutor(Thread):
 			command = command + 'fair'
 			return command
 		elif jobType == 0:
-			jobName = self.getJobName()
+			jobName = self.__excutedJob.getJobName()
 			#print self.__excutedJob.getConfig()
 			mapTaskCount = self.__excutedJob.getConfig().mapTaskCount
 			height = self.__excutedJob.getConfig().height
 			width = self.__excutedJob.getConfig().width
-			command = "python /home/mfkiller/code/spark_cloud/src/cloudComputing/render.py %s %d %d %d" % \
-			(jobName, mapTaskCount, width, height)
+			srcFile = self.__excutedJob.sourceFile
+			command = "python /home/mfkiller/code/spark_cloud/src/cloudComputing/render.py %s %d %d %d %s" % \
+			(jobName, mapTaskCount, width, height, srcFile)
 			return command
 
-	def getJobName(self):
-		return self.__excutedJob.name + '-' + str(self.__excutedJob.id)
-
 	def rmLog(self):
-		os.system('rm -f ' + config.logFolder + self.getJobName() + '.log >/dev/null 2>&1')
+		os.system('rm -f ' + config.logFolder + self.__excutedJob.getJobName() + '.log >/dev/null 2>&1')
 
 	def detectLog(self, jobType):
 		"""
