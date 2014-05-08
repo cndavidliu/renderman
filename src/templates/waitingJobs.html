@@ -42,9 +42,9 @@
     <div class="row">
       <div class="col-sm-3 col-md-2 sidebar">
         <ul class="nav nav-sidebar">
-          <li class="active"><a href="{{url_for('projectCenter')}}">Project Center</a></li>
+          <li><a href="{{url_for('projectCenter')}}">Project Center</a></li>
           <li><a href="{{url_for('createProject')}}">Create Project</a></li>
-          <li><a href="{{url_for('waitingJobs')}}">Waiting Projects</a></li>
+          <li class="active"><a href="{{url_for('waitingJobs')}}">Waiting Projects</a></li>
           <li><a href="{{url_for('runningJobs')}}">Running Projects</a></li>
           <li><a href="{{url_for('finishedJobs')}}">Finished Projects</a></li>
         </ul>
@@ -63,8 +63,8 @@
       <div class = "col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
         <div class="row">
           <ul class="nav nav-pills">
-            <li class="active"><a href="{{url_for('projectCenter')}}">Projects <span class="badge">{{ jobCount }}</span></a></li>
-            <li><a href="{{url_for('waitingJobs')}}">Waiting <span class="badge">{{ waitingJobCount }}</span></a></li>
+            <li><a href="{{url_for('projectCenter')}}">Projects <span class="badge">{{ jobCount }}</span></a></li>
+            <li class="active"><a href="{{url_for('waitingJobs')}}">Waiting <span class="badge">{{ waitingJobCount }}</span></a></li>
             <li><a href="{{url_for('runningJobs')}}">Running <span class="badge">{{ runningJobCount }}</span></a></li>
             <li><a href="{{url_for('finishedJobs')}}">Finished <span class="badge">{{ finishedJobCount }}</span></a></li>
           </ul>
@@ -78,40 +78,18 @@
               <th>jobType</th>
               <th>jobState</th>
               <th>createTime</th>
-              <th>startTime</th>
-              <th>finishTime</th>
-              <th>totalTime(s)</th>
-              <th>Result</th>
+              <th>retryTimes</th>
             </tr>
           </thead>
           <tbody>
             {% for job in jobs %}
-            <tr {%  if job.isFailed() %} class="danger" {% endif %} >
+            <tr {%  if job.isRetry() %} class="warn" {% endif %} >
             <td> <a href = "{{ url_for('jobInfo', jobId = job.id )}}"> {{ job.id }} </a></td>
             <td> {{ job.name }} </td>
             <td> {{ job.getJobType() }} </td>
             <td> {{ job.state }} </td>
             <td> {{ job.created_at }} </td>
-            {% if job.startTime %}
-            <td>{{ job.startTime }}</td>
-            {% else %}
-            <td></td>
-            {% endif %}
-            {% if job.finishTime %}
-            <td>{{ job.finishTime }}</td>
-            {% else %}
-            <td></td>
-            {% endif %}
-            {% if job.totalTime==0 %}
-            <td></td>
-            {% else %}
-            <td>{{ job.totalTime }}</td>
-            {% endif %}
-            {% if job.isSuccess() %}
-            <td><a href = "{{ url_for('getResult') }}">{{ job.getResultName() }}</a></td>
-            {% else %}
-            <td></td>
-            {% endif %}
+            <td> {{ job.retryTimes }} </td>
           </tr>
           {% endfor %}
           </tbody>

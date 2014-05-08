@@ -44,8 +44,9 @@
         <ul class="nav nav-sidebar">
           <li><a href="{{url_for('projectCenter')}}">ProjectCenter</a></li>
           <li class="active"><a href="{{url_for('createProject')}}">Create Project</a></li>
-          <li><a href="#">Running Projects</a></li>
-          <li><a href="#">History Projects</a></li>
+          <li><a href="{{url_for('waitingJobs')}}">Waiting Projects</a></li>
+          <li><a href="{{url_for('runningJobs')}}">Running Projects</a></li>
+          <li><a href="{{url_for('finishedJobs')}}">Finished Projects</a></li>
         </ul>
         <ul class="nav nav-sidebar">
           <li><a href="">InformationCenter</a></li>

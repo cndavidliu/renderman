@@ -1,10 +1,11 @@
-from sqlalchemy import Column, Integer, Sequence, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, Sequence, String, DateTime, ForeignKey, desc
 from sqlalchemy.orm import relationship, backref
 from .meta import Model
 import datetime
 
-jobTypes = ['render', 'fair']
+jobTypes = ['Render', 'Fair']
 jobStates = ['Create', 'Wait', 'Running', 'Failed', 'Success', 'Retry']
+resultFileSuffix = ['.png', '.obj']
 
 class Job(Model):
 	"""
@@ -34,7 +35,7 @@ class Job(Model):
 
 	#Owner
 	user_id = Column(Integer, ForeignKey('user.id'))
-	user = relationship('User', backref = backref('jobs', order_by = id))
+	user = relationship('User', backref = backref('jobs', order_by = id.desc()))
 
 
 	def __repr__(self):
@@ -67,3 +68,23 @@ class Job(Model):
 	def getJobName(self):
 		global jobTypes
 		return jobTypes[self.jobType] + '_' + self.name + '-' + str(self.user_id)
+
+	def isSuccess(self):
+		global jobStates
+		return self.state == jobStates[4]
+
+	def getResultName(self):
+		global resultFileSuffix
+		return self.getJobName() + resultFileSuffix[0] 
+
+	def getJobType(self):
+		global jobTypes
+		return jobTypes[self.jobType]
+
+	def isFailed(self):
+		global jobStates
+		return self.state == jobStates[3]
+
+	def isRetry(self):
+		global jobStates
+		return self.state == jobStates[5]
