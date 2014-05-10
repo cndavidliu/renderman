@@ -1,0 +1,182 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+	<meta http-equiv="Content-Type" content = "text/html; charset=UTF-8">
+	<link rel="stylesheet" type="text/css" href="{{url_for('static', filename = 'css/bootstrap.min.css')}}">
+  <link rel="stylesheet" type="text/css" href="{{url_for('static', filename = 'css/dashboard.css')}}">
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+	<script src="{{url_for('static', filename = 'js/bootstrap.min.js')}}" type="text/javascript"></script> 
+	<title> Cloud Computing </title>
+</head>
+<body>
+  <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <a class="navbar-brand" href="{{url_for('home')}}">Cloud Computing</a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav navbar-left">
+          <li><a href="{{url_for('home')}}">Home Page</a></li>
+          {% if userName %}
+          <li><a href="#">Information Center</a></li>
+          <li class = "active"><a href="{{url_for('projectCenter')}}">Project Center</a></li> 
+          {% endif %}
+          <li><a href="http://www.yquan.org">About</a></li> 
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+          {% if userName %}
+          <li><a href="#">{{ userName }}</a></li>
+          <li><a href="{{url_for('logout')}}">Logout</a></li>
+          {% else %}
+          <li><a href="{{url_for('login')}}">Login</a></li>
+          <li><a href="{{url_for('register')}}">Register</a></li>
+          {% endif %}
+        </ul>
+        <form class="navbar-form navbar-right"  action = "{{url_for('searchJobs')}}", method="POST">
+          <input type="text" class="form-control" placeholder="Search..." name="keyword" >
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-sm-3 col-md-2 sidebar">
+        <ul class="nav nav-sidebar">
+          <li class="active"><a href="{{url_for('projectCenter')}}">Project Center</a></li>
+          <li><a href="{{url_for('createProject')}}">Create Project</a></li>
+          <li><a href="{{url_for('waitingJobs')}}">Waiting Projects</a></li>
+          <li><a href="{{url_for('runningJobs')}}">Running Projects</a></li>
+          <li><a href="{{url_for('finishedJobs')}}">Finished Projects</a></li>
+        </ul>
+        <ul class="nav nav-sidebar">
+          <li><a href="">InformationCenter</a></li>
+          <li><a href="">Show Information</a></li>
+          <li><a href="">Edit Information</a></li>
+          <li><a href="">Change Password</a></li>
+        </ul>
+        <ul class="nav nav-sidebar">
+          <li><a href="http://www.yquan.org">About</a></li>
+          <li><a href="https://github.com/mfmelody/spark_cloud">Project Page</a></li>
+          <li><a href="{{url_for('home')}}">Home Page</a></li>
+        </ul>
+      </div>  
+      <div class = "col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+        <h2 class="page-header">Job Infomation</h2>
+        <div class="row" style="height: 10px;"></div>
+        <div class="row">
+          <div class = "col-sm-6 col-sm-offset-3">
+            <table class="table table-bordered table-hover">
+              <thead>
+                <tr>
+                  <th>Parameter</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td  class="text-danger">jobId</td>
+                  <td> <a href = "{{ url_for('jobInfo', jobId = job.id )}}"> {{ job.id }} </a></td> 
+                </tr>
+                <tr>
+                  <td class="text-primary">jobName</td>
+                  <td> {{ job.name }} </td> 
+                </tr>
+                <tr>
+                  <td>jobType</td>
+                  <td> {{ job.getJobType() }} </td> 
+                </tr>
+                <tr>
+                  <td class="text-muted">jobState</td>
+                  <td>{{ job.state }}</td> 
+                </tr>
+                <tr>
+                  <td class="text-success">description</td>
+                  <td>{{ job.description }}</td> 
+                </tr>
+                <tr>
+                  <td class="text-info">extraInfo</td>
+                  <td>{{ job.extraInfo }}</td> 
+                </tr>
+                <tr>
+                  <td>createTime</td>
+                  <td>{{ job.created_at }}</td> 
+                </tr>
+                <tr>
+                  <td>updateTime</td>
+                  <td>{{ job.updated_at }}</td> 
+                </tr>
+                <tr>
+                  <td class="text-info">overTime(s)</td>
+                  <td>{{ job.overTime }}</td> 
+                </tr>
+                <tr>
+                  <td class="text-danger">retryTimes</td>
+                  <td>{{ job.retryTimes }}</td> 
+                </tr>
+                <tr>
+                  <td>startTime</td>
+                  {% if job.startTime %}
+                  <td>{{ job.startTime }}</td>
+                  {% else %}
+                  <td></td>
+                  {% endif %}
+                </tr>
+                <tr>
+                  <td class="text-success">finishTime</td>
+                  {% if job.finishTime %}
+                  <td>{{ job.finishTime }}</td>
+                  {% else %}
+                  <td></td>
+                  {% endif %}
+                </tr>
+                <tr>
+                  <td class="text-info">totalTime</td>
+                  {% if job.totalTime==0 %}
+                  <td></td>
+                  {% else %}
+                  <td>{{ job.totalTime }}</td>
+                  {% endif %}
+                </tr>
+                <tr>
+                  <td class="text-danger">userId</td>
+                  <td>{{ job.user_id }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <h2 class="page-header">Config Infomation</h2>
+        <div class="row" style="height: 10px;"></div>
+        <div class = "col-sm-8 col-sm-offset-2">
+          <table class="table table-bordered table-hover">
+            <thead>
+              <tr>
+                <th>memory(M)</th>
+                <th>cores</th>
+                <th>extraInfo</th>
+                {% if job.isRender() %}
+                <th>mapTaskCount</th>
+                <th>height</th>
+                <th>width</th>
+                {% endif %}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>{{ job.getConfig().instanceMem }}</td>
+                <td>{{ job.getConfig().instanceCores }}</td>
+                <td>{{ job.getConfig().extraInfo }}</td>
+                {% if job.isRender() %}
+                <td>{{ job.getConfig().mapTaskCount }}</td>
+                <td>{{ job.getConfig().height }}</td>
+                <td>{{ job.getConfig().width }}</td>
+                {% endif %}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
