@@ -32,8 +32,8 @@
           <li><a href="{{url_for('register')}}">Register</a></li>
           {% endif %}
         </ul>
-        <form class="navbar-form navbar-right">
-          <input type="text" class="form-control" placeholder="Search...">
+        <form class="navbar-form navbar-right"  action = "{{url_for('searchJobs')}}", method="POST">
+          <input type="text" class="form-control" placeholder="Search..." name="keyword" >
         </form>
       </div>
     </div>
@@ -71,7 +71,14 @@
           <div class="form-group">
             <label for="inputEmail3" class="col-sm-3 control-label">JobName</label>
             <div class="col-sm-4">
-              <input type="text" class="form-control" id="inputEmail3" placeholder="4-12chars" name="jobName" value = "{{ jobName }}">
+              <input type="text" class="form-control" id="inputEmail3" placeholder="4-16chars" name="jobName" value = "{{ jobName }}">
+            </div>
+            <label for="inputType" class="col-sm-1 control-label">JobType</label>
+            <div class="col-sm-2">
+              <select class="form-control" name="jobType" id = "inputType">
+                <option name="jobType" value="0" {% if jobType==0 %} selected="selected" {% endif %}>Render</option>
+                <option name="jobType" value="1" {% if jobType==1 %} selected="selected" {% endif %}>Fair</option>
+              </select>
             </div>
           </div>
           <div class="form-group">
@@ -79,11 +86,12 @@
             <div class="col-sm-3">
               <input type="file" id="exampleInputFile" class="form-control" name="file">
             </div>
-            <label for="inputType" class="col-sm-1 control-label">JobType</label>
+            <label for="inputTime" class="col-sm-1 control-label">overTime(s)</label>
             <div class="col-sm-3">
-              <select class="form-control" name="jobType" id = "inputType">
-                <option name="jobType" value="0" {% if jobType==0 %} selected="selected" {% endif %}>Render</option>
-                <option name="jobType" value="1" {% if jobType==1 %} selected="selected" {% endif %}>Fair</option>
+              <select class="form-control" name="overTime" id = "inputTime">
+                {% for i in overTimes %}
+                <option value="{{ i }}" name="overTime" {% if overTime==i %} selected="selected" {% endif %}>{{ i }}</option>
+                {% endfor %}
               </select>
             </div>
           </div>
