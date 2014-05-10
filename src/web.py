@@ -4,7 +4,7 @@ from sqlalchemy import or_, and_, desc
 from werkzeug.utils import secure_filename
 import os
 
-from .config import SERVER_IP, DATABASE_URL, mapTaskCounts, pixels, maxStore, threadCount, failedCount, retryCount, ALLOWED_EXTENSIONS, serverFolder, redirectCommand
+from .config import overTimes, SERVER_IP, DATABASE_URL, mapTaskCounts, pixels, maxStore, threadCount, failedCount, retryCount, ALLOWED_EXTENSIONS, serverFolder, redirectCommand, downloadFolder, relativeDownloadFolder
 from .models import meta, user, job, config
 from ..test.clean import cleanDatabase
 from .jobManager import jobManager, dbManager
@@ -17,11 +17,12 @@ isRegisterSuccess = False
 manager = None
 
 def init():
-	#cleanDatabase()
+	cleanDatabase()
 	meta.init_models(DATABASE_URL)
-	#meta.init_db()
+	meta.init_db()
 	global manager
 	manager = jobManager.JobManager(maxStore, threadCount, failedCount, retryCount)
+	manager.start()
 
 def checkFile(filename):
 	if '.' in filename:
@@ -123,6 +124,7 @@ def register():
 				password = userPassword, age = registerUser.age, sex = registerUser.sex)
 		else:
 			os.system('mkdir ' + serverFolder + userName + redirectCommand)
+			os.system('mkdir ' + downloadFolder + userName + redirectCommand)
 			dbManager.insert(registerUser)
 			global isRegisterSuccess
 			isRegisterSuccess = True
@@ -155,7 +157,7 @@ def projectCenter():
 	selectUser = users[0]
 	jobCount = len(selectUser.jobs)
 	runningJobCount = job.Job.query.filter(and_(job.Job.state == job.jobStates[2], job.Job.user_id == userId)).count()
-	finishedJobCount = job.Job.query.filter(and_(job.Job.state == job.jobStates[3], job.Job.state == job.jobStates[4], job.Job.user_id == userId)).count()
+	finishedJobCount = job.Job.query.filter(and_(or_(job.Job.state == job.jobStates[3], job.Job.state == job.jobStates[4]), job.Job.user_id == userId)).count()
 	waitingJobCount = jobCount - runningJobCount - finishedJobCount
 	return render_template('projectCenter.html', userName = userName, userId = userId, jobs = selectUser.jobs, \
 	 jobCount = len(selectUser.jobs), runningJobCount = runningJobCount, finishedJobCount = finishedJobCount, waitingJobCount = waitingJobCount)
@@ -218,12 +220,15 @@ def createProject():
 	userName = session['username']
 	userId = int(session['userid'])
 	if request.method == 'GET':
-		return render_template('createProject.html', userName = userName, userId = userId, mapTaskCounts = mapTaskCounts, pixels = pixels)
+		return render_template('createProject.html', userName = userName, userId = userId, \
+			mapTaskCounts = mapTaskCounts, pixels = pixels, overTimes = overTimes)
 	if request.method == 'POST':
 		jobName = ''
 		sourceFile = None
 		description = ''
 		jobType = int(request.form['jobType'])
+		overTime = int(request.form['overTime'])
+		mapTaskCount = int(request.form['mapTaskCount'])
 		errorMessage = ['', '']
 		flag = False
 		if 'jobName' in request.form:
@@ -233,11 +238,11 @@ def createProject():
 		if jobName == '':
 			errorMessage[0] = "JobName is necessary!"
 			flag = True
-		elif len(jobName) < 4 or len(jobName) > 12:
+		elif len(jobName) < 4 or len(jobName) > 16:
 			errorMessage[0] = "The  length of jobName is illegal!"
 			flag = True
 		else:
-			jobs = job.Job.query.filter(or_(job.Job.name == jobName, job.Job.jobType == jobType, job.Job.user_id == userId)).all()
+			jobs = job.Job.query.filter(and_(job.Job.name == jobName, job.Job.jobType == jobType, job.Job.user_id == userId)).all()
 			if len(jobs) != 0:
 				flag = True
 				errorMessage[0] = 'You have used this name in this kind of job!'
@@ -253,11 +258,12 @@ def createProject():
 				flag = True
 		if flag:		
 			return render_template('createProject.html', userName = userName, userId = userId, jobName = jobName, description = description, \
-				jobType = jobType, mapTaskCount = int(request.form['mapTaskCount']), pixel = request.form['pixel'], \
-				mapTaskCounts = mapTaskCounts, pixels = pixels, errorMessage = errorMessage)
+				jobType = jobType, mapTaskCount = mapTaskCount, overTime = overTime, pixel = request.form['pixel'], \
+				mapTaskCounts = mapTaskCounts, pixels = pixels, errorMessage = errorMessage, overTimes = overTimes)
 		else:
 			newJob = job.Job(jobName, sourceFile.filename, jobType)
 			newJob.user_id = userId
+			newJob.overTime = overTime
 			sourceFilePath = serverFolder + userName + '/' + newJob.getJobName() + '.' + fileSuffix
 			newJob.sourceFile = sourceFilePath
 			sourceFile.save(sourceFilePath)
@@ -265,17 +271,24 @@ def createProject():
 			jobConfig = config.Config()
 			if jobType == 0:
 				pixelInfo = getPixel(request.form['pixel'])
-				jobConfig.setRenderConfig(int(request.form['mapTaskCount']), pixelInfo[0], pixelInfo[1])
+				jobConfig.setRenderConfig(mapTaskCount, pixelInfo[0], pixelInfo[1])
 			# submit job
 			global manager
 			manager.submitJob(newJob, jobConfig)
 			return redirect(url_for('projectCenter'))	
 
-@app.route('/getResult')
-def getResult():
+@app.route('/getResult/<int:jobId>')
+def getResult(jobId):
 	if 'userid' not in session:
 		return redirect(url_for('login'))
-	return redirect(url_for('static', filename = 'img/index.jpg'))
+	userName = session['username']
+	selectJob = job.Job.query.filter_by(id = jobId).first()
+	downloadPath = downloadFolder + userName
+	if not selectJob.ifDownloaded():
+		selectJob.downloadFile(downloadPath)
+		dbManager.commit(selectJob)
+	fileName = relativeDownloadFolder + userName + '/' + selectJob.getResultName()
+	return redirect(url_for('static', filename = fileName))
 
 @app.route('/jobInfo/<int:jobId>')
 def jobInfo(jobId):
@@ -283,7 +296,22 @@ def jobInfo(jobId):
 		return redirect(url_for('login'))
 	userName = session['username']
 	userId = int(session['userid'])
-	return redirect(url_for('projectCenter'))
+	selectJob = job.Job.query.filter_by(id = jobId).first()
+	return render_template('jobInfo.html', job = selectJob, userName = userName, userId = userId)
+
+@app.route('/searchJobs', methods = ['GET', 'POST'])
+def searchJobs():
+	if 'userid' not in session:
+		return redirect(url_for('login'))
+	userName = session['username']
+	userId = int(session['userid'])
+	if request.method == 'GET':
+		return render_template('searchJobs.html', userId = userId, userName = userName)
+	if request.method == 'POST':
+		keyword = request.form['keyword']
+		likeSentence = '%' +  keyword + '%'
+		searchJobs = job.Job.query.filter(job.Job.name.like(likeSentence)).order_by(job.Job.id.desc()).all()
+		return render_template('searchJobs.html', jobs = searchJobs, userId = userId, userName = userName)
 
 
 if __name__  == '__main__':

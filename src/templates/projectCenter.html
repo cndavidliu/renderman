@@ -32,8 +32,8 @@
           <li><a href="{{url_for('register')}}">Register</a></li>
           {% endif %}
         </ul>
-        <form class="navbar-form navbar-right">
-          <input type="text" class="form-control" placeholder="Search...">
+        <form class="navbar-form navbar-right"  action = "{{url_for('searchJobs')}}", method="POST">
+          <input type="text" class="form-control" placeholder="Search..." name="keyword" >
         </form>
       </div>
     </div>
@@ -108,7 +108,7 @@
             <td>{{ job.totalTime }}</td>
             {% endif %}
             {% if job.isSuccess() %}
-            <td><a href = "{{ url_for('getResult') }}">{{ job.getResultName() }}</a></td>
+            <td><a href = "{{ url_for('getResult', jobId = job.id ) }}">{{ job.getResultName() }}</a></td>
             {% else %}
             <td></td>
             {% endif %}

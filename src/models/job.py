@@ -2,10 +2,12 @@ from sqlalchemy import Column, Integer, Sequence, String, DateTime, ForeignKey, 
 from sqlalchemy.orm import relationship, backref
 from .meta import Model
 import datetime
+import os
 
 jobTypes = ['Render', 'Fair']
 jobStates = ['Create', 'Wait', 'Running', 'Failed', 'Success', 'Retry']
 resultFileSuffix = ['.png', '.obj']
+resultFloder = ['/img/', '/obj/']
 
 class Job(Model):
 	"""
@@ -36,6 +38,8 @@ class Job(Model):
 	#Owner
 	user_id = Column(Integer, ForeignKey('user.id'))
 	user = relationship('User', backref = backref('jobs', order_by = id.desc()))
+
+	isDownloaded = Column(String(1), default = '0')
 
 
 	def __repr__(self):
@@ -88,3 +92,25 @@ class Job(Model):
 	def isRetry(self):
 		global jobStates
 		return self.state == jobStates[5]
+
+	def isRender(self):
+		return self.jobType == 0
+
+	def downloadFile(self, downloadPath):
+		jobName = self.getJobName()
+		global resultFileSuffix, resultFloder
+		redirectCommand = " >/dev/null 2>&1"
+		downloadCommand = "$HADOOP_HOME/bin/hadoop fs -get " + jobName + resultFloder[self.jobType] + jobName \
+		+ resultFileSuffix[self.jobType] + " " + downloadPath + "/"
+		os.system(downloadCommand + redirectCommand)
+		self.isDownloaded = '1'
+
+	def ifDownloaded(self):
+		return self.isDownloaded == '1'
+
+	def removeFile(self, downloadPath):
+		jobName = self.getJobName()
+		redirectCommand = " >/dev/null 2>&1"
+		global resultFileSuffix
+		os.system("rm -f " + downloadPath + "/" + jobName + resultFileSuffix[self.jobType] + redirectCommand)
+		self.isDownloaded = '0'

@@ -39,6 +39,6 @@ for i in xrange(mapTaskCount):
 	partRegion = partImage.crop(partBox)
 	renderImg.paste(partRegion, partBox)
 
-renderImg.save(hdfsFolder + jobName + "-output/result.png")
-os.system("$HADOOP_HOME/bin/hadoop fs -put " + hdfsFolder + jobName + "-output/result.png " + jobName + "/img")
+renderImg.save(hdfsFolder + jobName + "-output/" + jobName + ".png")
+os.system("$HADOOP_HOME/bin/hadoop fs -put " + hdfsFolder + jobName + "-output/" + jobName + ".png " + jobName + "/img")
 os.system("rm -rf " + hdfsFolder + jobName + "-output")
