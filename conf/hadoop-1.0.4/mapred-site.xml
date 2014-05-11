@@ -12,4 +12,8 @@
 		<name>mapred.local.dir</name>
 		<value>/home/mfkiller/hadoop-1.0.4/tmp</value>
 	</property>
+	<property>
+		<name>mapred.tasktracker.map.tasks.maximum</name>
+		<value>1</value>
+	</property>
 </configuration>
