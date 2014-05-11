@@ -18,14 +18,14 @@
         <ul class="nav navbar-nav navbar-left">
           <li><a href="{{url_for('home')}}">Home Page</a></li>
           {% if userName %}
-          <li><a href="#">Information Center</a></li>
+          <li><a href="{{url_for('personalInfo')}}">Information Center</a></li>
           <li class = "active"><a href="{{url_for('projectCenter')}}">Project Center</a></li> 
           {% endif %}
           <li><a href="http://www.yquan.org">About</a></li> 
         </ul>
         <ul class="nav navbar-nav navbar-right">
           {% if userName %}
-          <li><a href="#">{{ userName }}</a></li>
+          <li><a href="{{url_for('personalInfo')}}">{{ userName }}</a></li>
           <li><a href="{{url_for('logout')}}">Logout</a></li>
           {% else %}
           <li><a href="{{url_for('login')}}">Login</a></li>
@@ -49,10 +49,10 @@
           <li><a href="{{url_for('finishedJobs')}}">Finished Projects</a></li>
         </ul>
         <ul class="nav nav-sidebar">
-          <li><a href="">InformationCenter</a></li>
-          <li><a href="">Show Information</a></li>
+          <li><a href="{{url_for('personalInfo')}}">InformationCenter</a></li>
+          <li><a href="{{url_for('showInfo')}}">Show Information</a></li>
           <li><a href="">Edit Information</a></li>
-          <li><a href="">Change Password</a></li>
+          <li><a href="{{url_for('changePassword')}}">Change Password</a></li>
         </ul>
         <ul class="nav nav-sidebar">
           <li><a href="http://www.yquan.org">About</a></li>

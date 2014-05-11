@@ -17,12 +17,12 @@ isRegisterSuccess = False
 manager = None
 
 def init():
-	cleanDatabase()
+	#cleanDatabase()
 	meta.init_models(DATABASE_URL)
-	meta.init_db()
+	#meta.init_db()
 	global manager
 	manager = jobManager.JobManager(maxStore, threadCount, failedCount, retryCount)
-	manager.start()
+	#manager.start()
 
 def checkFile(filename):
 	if '.' in filename:
@@ -312,6 +312,71 @@ def searchJobs():
 		likeSentence = '%' +  keyword + '%'
 		searchJobs = job.Job.query.filter(job.Job.name.like(likeSentence)).order_by(job.Job.id.desc()).all()
 		return render_template('searchJobs.html', jobs = searchJobs, userId = userId, userName = userName)
+
+@app.route('/personalInfo')
+def personalInfo():
+	if 'userid' not in session:
+		return redirect(url_for('login'))
+	urserName = session['username']
+	userId = int(session['userid'])
+	selectUser = user.User.query.filter_by(id = userId).first()
+	jobCount = len(selectUser.jobs)
+	return render_template('personalInfo.html', user = selectUser, jobCount = jobCount)
+
+@app.route('/showInfo')
+def showInfo():
+	if 'userid' not in session:
+		return redirect(url_for('login'))
+	urserName = session['username']
+	userId = int(session['userid'])
+	selectUser = user.User.query.filter_by(id = userId).first()
+	jobCount = len(selectUser.jobs)
+	return render_template('personalInfo.html', user = selectUser, jobCount = jobCount, isShow = True)
+
+@app.route('/changePassword', methods =['GET', 'POST'])
+def changePassword():
+	if 'userid' not in session:
+		return redirect(url_for('login'))
+	urserName = session['username']
+	userId = int(session['userid'])
+	selectUser = user.User.query.filter_by(id = userId).first()
+	jobCount = len(selectUser.jobs)
+	if request.method == 'GET':
+		return render_template('changePassword.html', user = selectUser, jobCount = jobCount)
+	if request.method == 'POST':
+		password = ''
+		newPassword = ''
+		modifyPassword = ''
+		errorMessage = ''
+		flag = False
+		if 'password' in request.form:
+			password = request.form['password']
+		if 'newPassword' in request.form:
+			newPassword = request.form['newPassword']
+		if 'modifyPassword' in request.form:
+			modifyPassword = request.form['modifyPassword']
+		if password == '' or modifyPassword == '' or newPassword == '':
+			errorMessage = 'All the fields are necessary!'
+			return render_template('changePassword.html', password = password, modifyPassword = modifyPassword, \
+				newPassword = newPassword, user = selectUser, errorMessage = errorMessage, jobCount = jobCount)
+		if not selectUser.checkPassword(password):
+			errorMessage = 'The old password you input is wrong!'
+			flag = True
+		elif not user.User.judgePassword(newPassword):
+			errorMessage = "New password's length must between 6 and 12"
+			flag = True
+		elif modifyPassword != newPassword:
+			errorMessage = 'The new password you input twice is not same!'
+			flag = True
+		if flag:
+			return render_template('changePassword.html', password = password, modifyPassword = modifyPassword, \
+				newPassword = newPassword, user = selectUser, errorMessage = errorMessage, jobCount = jobCount)
+		else:
+			selectUser.setPassword = newPassword
+			dbManager.commit()
+			session.pop('username', None)
+			session.pop('userid', None)
+			return redirect(url_for('login'))
 
 
 if __name__  == '__main__':

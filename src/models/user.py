@@ -7,6 +7,8 @@ from passlib.hash import sha256_crypt
 
 from meta import Model
 
+sexs = ['Male', 'Female']
+
 class User(Model):
 	"""
 	Model for user info
@@ -20,7 +22,8 @@ class User(Model):
 	sex = Column(Integer, default = 0)
 	email = Column(String(255), nullable = False, unique = True)
 	age = Column(Integer, default = 18)
-	description = Column(String(255))
+	company = Column(String(255), default = '')
+	description = Column(String(255), default = '')
 
 	@hybrid_property
 	def password(self):
@@ -62,3 +65,7 @@ class User(Model):
 	@staticmethod
 	def judgeEmail(userEmail):
 		return re.match("^.+\\@(\\[?)[a-zA-Z0-9\\-\\.]+\\.([a-zA-Z]{2,3}|[0-9]{1,3})(\\]?)$", userEmail)
+
+	def getSex(self):
+		global sexs
+		return sexs[self.sex]

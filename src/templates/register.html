@@ -20,7 +20,7 @@
         </ul>
         <ul class="nav navbar-nav navbar-right">
           {% if userName %}
-          <li><a href="#">UserName</a></li>
+          <li><a href="{{url_for('personalInfo')}}">UserName</a></li>
           <li><a href="{{url_for('logout')}}">Logout</a></li>
           {% else %}
           <li><a href="{{url_for('login')}}">Login</a></li>

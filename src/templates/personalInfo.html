@@ -17,15 +17,15 @@
       <div class="navbar-collapse collapse">
         <ul class="nav navbar-nav navbar-left">
           <li><a href="{{url_for('home')}}">Home Page</a></li>
-          {% if userName %}
-          <li><a href="{{url_for('personalInfo')}}">Information Center</a></li>
-          <li class = "active"><a href="{{url_for('projectCenter')}}">Project Center</a></li> 
+          {% if user %}
+          <li class="active"><a href="{{url_for('personalInfo')}}">Information Center</a></li>
+          <li ><a href="{{url_for('projectCenter')}}">Project Center</a></li> 
           {% endif %}
           <li><a href="http://www.yquan.org">About</a></li> 
         </ul>
         <ul class="nav navbar-nav navbar-right">
-          {% if userName %}
-          <li><a href="{{url_for('personalInfo')}}">{{ userName }}</a></li>
+          {% if user %}
+          <li><a href="{{url_for('personalInfo')}}">{{ user.name }}</a></li>
           <li><a href="{{url_for('logout')}}">Logout</a></li>
           {% else %}
           <li><a href="{{url_for('login')}}">Login</a></li>
@@ -42,15 +42,15 @@
     <div class="row">
       <div class="col-sm-3 col-md-2 sidebar">
         <ul class="nav nav-sidebar">
-          <li class="active"><a href="{{url_for('projectCenter')}}">Project Center</a></li>
+          <li><a href="{{url_for('projectCenter')}}">Project Center</a></li>
           <li><a href="{{url_for('createProject')}}">Create Project</a></li>
           <li><a href="{{url_for('waitingJobs')}}">Waiting Projects</a></li>
           <li><a href="{{url_for('runningJobs')}}">Running Projects</a></li>
           <li><a href="{{url_for('finishedJobs')}}">Finished Projects</a></li>
         </ul>
         <ul class="nav nav-sidebar">
-          <li><a href="{{url_for('personalInfo')}}">InformationCenter</a></li>
-          <li><a href="{{url_for('showInfo')}}">Show Information</a></li>
+          <li {% if not isShow %} class = "active" {% endif %}><a href="{{url_for('personalInfo')}}">InformationCenter</a></li>
+          <li {% if isShow %} class = "active" {% endif %}><a href="{{url_for('showInfo')}}">Show Information</a></li>
           <li><a href="">Edit Information</a></li>
           <li><a href="{{url_for('changePassword')}}">Change Password</a></li>
         </ul>
@@ -61,54 +61,54 @@
         </ul>
       </div>  
       <div class = "col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-        <h2 class="page-header">Search Results:</h2>
-        <div class="row" style="height: 10px;"></div>
-        <table class="table table-bordered table-hover">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>jobName</th>
-              <th>jobType</th>
-              <th>jobState</th>
-              <th>createTime</th>
-              <th>startTime</th>
-              <th>finishTime</th>
-              <th>totalTime(s)</th>
-              <th>Result</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for job in jobs %}
-            <tr {%  if job.isFailed() %} class="danger" {% endif %} >
-            <td> <a href = "{{ url_for('jobInfo', jobId = job.id )}}"> {{ job.id }} </a></td>
-            <td> {{ job.name }} </td>
-            <td> {{ job.getJobType() }} </td>
-            <td> {{ job.state }} </td>
-            <td> {{ job.created_at }} </td>
-            {% if job.startTime %}
-            <td>{{ job.startTime }}</td>
-            {% else %}
-            <td></td>
-            {% endif %}
-            {% if job.finishTime %}
-            <td>{{ job.finishTime }}</td>
-            {% else %}
-            <td></td>
-            {% endif %}
-            {% if job.totalTime==0 %}
-            <td></td>
-            {% else %}
-            <td>{{ job.totalTime }}</td>
-            {% endif %}
-            {% if job.isSuccess() %}
-            <td><a href = "{{ url_for('getResult', jobId = job.id ) }}">{{ job.getResultName() }}</a></td>
-            {% else %}
-            <td></td>
-            {% endif %}
-          </tr>
-          {% endfor %}
-          </tbody>
-        </table>
+        <h2 class="page-header">User Infomation</h2>
+        <div class="row" style="height: 20px;"></div>
+        <div class="row">
+          <div class = "col-sm-6 col-sm-offset-3">
+            <table class="table table-bordered table-hover">
+              <thead>
+                <tr>
+                  <th>Parameter</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td  class="text-danger">userId</td>
+                  <td> <a href = "{{ url_for('personalInfo')}}"> {{ user.id }} </a></td> 
+                </tr>
+                <tr>
+                  <td class="text-primary">userName</td>
+                  <td> {{ user.name }} </td> 
+                </tr>
+                <tr>
+                  <td class="text-muted">userEmail</td>
+                  <td> {{ user.email }} </td>
+                </tr>
+                <tr>
+                  <td class="text-warning">Sex</td>
+                  <td> {{ user.getSex() }} </td>
+                </tr>
+                <tr>
+                  <td class="text-info">Age</td>
+                  <td> {{ user.age }} </td>
+                </tr>
+                <tr>
+                  <td>Company</td>
+                  <td> {{ user.company }} </td>
+                </tr>
+                <tr>
+                  <td class="text-muted">Description</td>
+                  <td> {{ user.description }} </td>
+                </tr>
+                <tr>
+                  <td class="text-danger">jobCount</td>
+                  <td><a href = "{{ url_for('projectCenter')}}"> {{ jobCount }} </a></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   </div>

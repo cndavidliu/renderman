@@ -25,7 +25,7 @@ def update(target, state, finished = False):
 	meta.db_session.commit()
 	return updateJob
 
-def commit(job):
+def commit(target = None):
 	meta.db_session.commit()
 
 def insert(target):

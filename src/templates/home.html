@@ -18,14 +18,14 @@
         <ul class="nav navbar-nav navbar-left">
           <li class = "active"><a href="{{url_for('home')}}">Home Page</a></li>
           {% if userName %}
-          <li><a href="#">Information Center</a></li>
+          <li><a href="{{url_for('personalInfo')}}">Information Center</a></li>
           <li><a href="{{url_for('projectCenter')}}">Project Center</a></li> 
           {% endif %}
           <li><a href="http://www.yquan.org">About</a></li> 
         </ul>
         <ul class="nav navbar-nav navbar-right">
           {% if userName %}
-          <li><a href="#">{{ userName }}</a></li>
+          <li><a href="{{url_for('personalInfo')}}">{{ userName }}</a></li>
           <li><a href="{{url_for('logout')}}">Logout</a></li>
           {% else %}
           <li><a href="{{url_for('login')}}">Login</a></li>

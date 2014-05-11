@@ -20,15 +20,15 @@
         </ul>
         <ul class="nav navbar-nav navbar-right">
           {% if userName %}
-          <li><a href="#">UserName</a></li>
+          <li><a href="{{url_for('personalInfo')}}">UserName</a></li>
           <li><a href="{{url_for('logout')}}">Logout</a></li>
           {% else %}
           <li><a href="{{url_for('login')}}">Login</a></li>
           <li><a href="{{url_for('register')}}">Register</a></li>
           {% endif %}
         </ul>
-        <form class="navbar-form navbar-right">
-          <input type="text" class="form-control" placeholder="Search...">
+        <form class="navbar-form navbar-right"  action = "{{url_for('searchJobs')}}", method="POST">
+          <input type="text" class="form-control" placeholder="Search..." name="keyword" >
         </form>
       </div>
     </div>
@@ -88,6 +88,13 @@
               </div>
             </div>
           </form>
+          <div class="row" style="height: 10px;"></div>
+          {% if errorMessage %}
+          <div class="alert alert-danger alert-dismissable">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>  
+            <strong>Warn!</strong> {{ errorMessage }}
+          </div>
+          {% endif %}
         </div>
       </div>
     </div>
