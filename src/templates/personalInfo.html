@@ -51,7 +51,7 @@
         <ul class="nav nav-sidebar">
           <li {% if not isShow %} class = "active" {% endif %}><a href="{{url_for('personalInfo')}}">InformationCenter</a></li>
           <li {% if isShow %} class = "active" {% endif %}><a href="{{url_for('showInfo')}}">Show Information</a></li>
-          <li><a href="">Edit Information</a></li>
+          <li><a href="{{url_for('editInfo')}}">Edit Information</a></li>
           <li><a href="{{url_for('changePassword')}}">Change Password</a></li>
         </ul>
         <ul class="nav nav-sidebar">

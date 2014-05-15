@@ -378,6 +378,53 @@ def changePassword():
 			session.pop('userid', None)
 			return redirect(url_for('login'))
 
+@app.route('/editInfo', methods = ['GET', 'POST'])
+def editInfo():
+	# put ages in the config file
+	ages = [i for i in xrange(18,80)]
+	if 'userid' not in session:
+		return redirect(url_for('login'))
+	urserName = session['username']
+	userId = int(session['userid'])
+	selectUser = user.User.query.filter_by(id = userId).first()
+	if request.method == 'GET':
+		return render_template('editInfo.html', user = selectUser, ages = ages)
+	if request.method == 'POST':
+		userEmail = ''
+		description = ''
+		flag = False
+		errorMessage = ['', '']
+		if 'email' in request.form:
+			userEmail = request.form['email']
+		if 'description' in request.form:
+			description = request.form['description']
+		if userEmail == '':
+			errorMessage[0] = 'The field that signed by * must be filled!'
+			flag = True
+		else:
+			if user.User.judgeEmail(userEmail) is None:
+				errorMessage[0] = 'The email address you input is not valid'
+				flag = True
+			else:
+				users = user.User.query.filter_by(email = userEmail).all()
+				if len(users) != 0 and users[0] != selectUser:
+					errorMessage[0] = "This email has been registered!"
+					flag = True
+			if len(description) > 255:
+				errorMessage[1] = 'The description is too long!'
+				flag = True
+		if flag:
+			return render_template('editInfo.html', ages = ages, errorMessage = errorMessage, user = selectUser)
+		else:
+			selectUser.email = userEmail
+			selectUser.description = description
+			if 'company' in request.form:
+				selectUser.company = request.form['company']
+			selectUser.age = int(request.form['age'])
+			selectUser.sex = int(request.form['sex'])
+			dbManager.commit(selectUser)
+			return redirect(url_for('personalInfo'))
+
 
 if __name__  == '__main__':
 	init()
