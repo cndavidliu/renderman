@@ -19,6 +19,9 @@ width = int(sys.argv[2])
 height = int(sys.argv[3])
 mapTaskCount = int(sys.argv[4])
 
+outputFolder = hdfsFolder + jobName + "-output"
+if os.path.exists(outputFolder):
+	os.system("rm -rf " + outputFolder)
 os.system("mkdir " +  hdfsFolder + jobName + "-output")
 
 resultInfo = []

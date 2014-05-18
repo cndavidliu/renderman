@@ -11,3 +11,9 @@
 ### Architecture
 	- Job Manager using Queue
 	- Job State monitor  
+
+### System Start-up
+```
+cd ..
+python -m spark_cloud.src.web
+```

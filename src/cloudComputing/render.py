@@ -16,7 +16,7 @@ width = sys.argv[4]
 height = sys.argv[5]
 srcFile = sys.argv[6]
 
-logFile = config.logFolder + jobName + '.log'
+logFile = config.hdfsLogFolder + jobName + '.log'
 redirectCommand = '>>' + logFile + ' 2>>' + logFile
 
 #hdfs ops

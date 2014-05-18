@@ -2,6 +2,8 @@
 
 #### The logfiles:
 - jobName + jobID + '.log'
+- system.log   (system log)
+- clean.log    (retry clean files' log)
 
 #### Usage:
 - the logs used to record the output of the hadoop streaming and spark streaming

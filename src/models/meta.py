@@ -17,8 +17,8 @@ class Model(object):
 
 	query = db_session.query_property()
 
-	created_at = Column(DateTime, default = datetime.utcnow)
-	updated_at = Column(DateTime, default = datetime.utcnow, onupdate = datetime.utcnow)
+	created_at = Column(DateTime, default = datetime.now)
+	updated_at = Column(DateTime, default = datetime.now, onupdate = datetime.now)
 
 from sqlalchemy.ext.declarative import declarative_base
 

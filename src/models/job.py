@@ -5,7 +5,7 @@ import datetime
 import os
 
 jobTypes = ['Render', 'Fair']
-jobStates = ['Create', 'Wait', 'Running', 'Failed', 'Success', 'Retry']
+jobStates = ['Create', 'Wait', 'Running', 'Failed', 'Success', 'Retry', 'Killed']
 resultFileSuffix = ['.png', '.obj']
 resultFloder = ['/img/', '/obj/']
 
@@ -48,7 +48,7 @@ class Job(Model):
 		 (self.name, jobTypes[self.jobType], self.description, self.user, self.getConfig())
 
 	def isFinished(self):
-		return self.state in ['Failed', 'Success']
+		return self.state in ['Failed', 'Success', 'Killed']
 
 	def getConfig(self):
 		if len(self.configs) == 0:
@@ -87,7 +87,7 @@ class Job(Model):
 
 	def isFailed(self):
 		global jobStates
-		return self.state == jobStates[3]
+		return self.state == jobStates[3] or self.state == jobStates[6]
 
 	def isRetry(self):
 		global jobStates
@@ -95,6 +95,10 @@ class Job(Model):
 
 	def isRender(self):
 		return self.jobType == 0
+
+	def isKilled(self):
+		global jobStates
+		return self.state == jobStates[6] 
 
 	def downloadFile(self, downloadPath):
 		jobName = self.getJobName()

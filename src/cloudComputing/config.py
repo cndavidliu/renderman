@@ -10,4 +10,4 @@ configFilePath = '/home/mfkiller/code/spark_cloud/src/cloudComputing/config.py'
 fileSuffix = '.zip'
 hdfsFolder = '/home/mfkiller/code/spark_cloud/hdfs/'
 
-logFolder = '/home/mfkiller/code/spark_cloud/logs/'
+hdfsLogFolder = '/home/mfkiller/code/spark_cloud/logs/'

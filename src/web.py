@@ -17,12 +17,12 @@ isRegisterSuccess = False
 manager = None
 
 def init():
-	#cleanDatabase()
+	cleanDatabase()
 	meta.init_models(DATABASE_URL)
-	#meta.init_db()
+	meta.init_db()
 	global manager
 	manager = jobManager.JobManager(maxStore, threadCount, failedCount, retryCount)
-	#manager.start()
+	manager.start()
 
 def checkFile(filename):
 	if '.' in filename:
@@ -156,8 +156,10 @@ def projectCenter():
 	users = user.User.query.filter_by(name = userName).all()
 	selectUser = users[0]
 	jobCount = len(selectUser.jobs)
-	runningJobCount = job.Job.query.filter(and_(job.Job.state == job.jobStates[2], job.Job.user_id == userId)).count()
-	finishedJobCount = job.Job.query.filter(and_(or_(job.Job.state == job.jobStates[3], job.Job.state == job.jobStates[4]), job.Job.user_id == userId)).count()
+	runningJobCount = job.Job.query.filter(and_(job.Job.state == job.jobStates[2], \
+		job.Job.user_id == userId)).count()
+	finishedJobCount = job.Job.query.filter(and_(or_(job.Job.state == job.jobStates[3], \
+		job.Job.state == job.jobStates[4], job.Job.state == job.jobStates[6]), job.Job.user_id == userId)).count()
 	waitingJobCount = jobCount - runningJobCount - finishedJobCount
 	return render_template('projectCenter.html', userName = userName, userId = userId, jobs = selectUser.jobs, \
 	 jobCount = len(selectUser.jobs), runningJobCount = runningJobCount, finishedJobCount = finishedJobCount, waitingJobCount = waitingJobCount)
@@ -174,7 +176,7 @@ def runningJobs():
 		job.Job.user_id == userId)).order_by(job.Job.id.desc()).all()
 	runningJobCount = len(runningJobs)
 	finishedJobCount = job.Job.query.filter(and_(or_(job.Job.state == job.jobStates[3], \
-		job.Job.state == job.jobStates[4]), job.Job.user_id == userId)).count()
+		job.Job.state == job.jobStates[4], job.Job.state == job.jobStates[6]), job.Job.user_id == userId)).count()
 	waitingJobCount = jobCount - runningJobCount - finishedJobCount
 	return render_template('runningJobs.html', userName = userName, userId = userId, jobs = runningJobs, \
 	 jobCount = jobCount, runningJobCount = runningJobCount, finishedJobCount = finishedJobCount, waitingJobCount = waitingJobCount)
@@ -190,7 +192,7 @@ def finishedJobs():
 	runningJobCount = job.Job.query.filter(and_(job.Job.state == job.jobStates[2], \
 		job.Job.user_id == userId)).count()
 	finishedJobs = job.Job.query.filter(and_(or_(job.Job.state == job.jobStates[3], \
-		job.Job.state == job.jobStates[4]), job.Job.user_id == userId)).order_by(job.Job.id.desc()).all()
+		job.Job.state == job.jobStates[4], job.Job.state == job.jobStates[6]), job.Job.user_id == userId)).order_by(job.Job.id.desc()).all()
 	finishedJobCount = len(finishedJobs)
 	waitingJobCount = jobCount - runningJobCount - finishedJobCount
 	return render_template('finishedJobs.html', userName = userName, userId = userId, jobs = finishedJobs, \

@@ -2,12 +2,19 @@
 from threading import Thread, Semaphore
 from Queue import Queue
 import os
-from .dbManager import checkJob, insert, selectJob, update, commit
 import datetime
-from ..cloudComputing import config
+
+from .dbManager import checkJob, insert, selectJob, update, commit
+from ..cloudComputing.config import hdfsLogFolder
+from .config import systemLogFolder, logKeyWord, systemLogConf
+from .fileManager import cleanFiles
+import logging
+import logging.config
+
+logging.config.fileConfig(systemLogConf)
+logger = logging.getLogger("system")
 
 semaphore = Semaphore(0)
-logKeyWord = ['complete', 'complete']
 
 class JobExcutor(Thread):
 	"""
@@ -33,29 +40,31 @@ class JobExcutor(Thread):
 			self.rmLog()
 			self.__excutedJob.startTime = datetime.datetime.now()
 			self.__excutedJob = update(self.__excutedJob, 'Running')
-			os.system(self.getCommand(self.__excutedJob.jobType))
+			os.system(self.getCommand())
 			self.__excutedJob.finishTime = datetime.datetime.now()
 		except BaseException, e:
 			exceptionOccured = 1
-			print e
-		if exceptionOccured != 1 and self.detectLog(self.__excutedJob.jobType):
+			logger.warn(e)
+		if exceptionOccured != 1 and self.detectLog():
 			self.rmLog()
 			self.__excutedJob.state = 'Success'
 		else:
 			self.__excutedJob.state = 'Retry'
-		update(self.__excutedJob, self.__excutedJob.state, True)
+			logger.debug("The job %s will retry! This is the %d time", \
+				self.__excutedJob.getJobName(), self.__excutedJob.retryTimes)
+		self.__excutedJob =  update(self.__excutedJob, self.__excutedJob.state, True)
 		global semaphore
 		semaphore.release()
 
-	def getCommand(self, jobType):
+	def getCommand(self):
 		command = ''
-		if jobType == -1:
+		if self.__excutedJob.jobType == -1:
 			command = command + 'ls -l'
 			return command
-		elif jobType == 1:
+		elif self.__excutedJob.jobType == 1:
 			command = command + 'fair'
 			return command
-		elif jobType == 0:
+		elif self.__excutedJob.jobType == 0:
 			jobName = self.__excutedJob.getJobName()
 			povFileName = self.__excutedJob.name
 			#print self.__excutedJob.getConfig()
@@ -68,14 +77,23 @@ class JobExcutor(Thread):
 			return command
 
 	def rmLog(self):
-		os.system('rm -f ' + config.logFolder + self.__excutedJob.getJobName() + '.log >/dev/null 2>&1')
+		os.system('rm -f ' + hdfsLogFolder + self.__excutedJob.getJobName() + '.log >/dev/null 2>&1')
 
-	def detectLog(self, jobType):
+	def detectLog(self):
+
 		"""
 		use log detection to check job state need to change or fix
 		"""
-		global logKeyWord
-		return True
+		jobLogFile = hdfsLogFolder + self.__excutedJob.getJobName() + '.log'
+		jobLog = open(jobLogFile, 'r')
+		logContent = jobLog.readlines()
+		keyword = logKeyWord[self.__excutedJob.jobType]
+		jobLog.close()
+		if self.__excutedJob.isRender():
+			if logContent[-1].strip() == keyword:
+				return False
+			else:
+				return True
 
 
 class Dispatcher(Thread):
@@ -105,14 +123,15 @@ class Dispatcher(Thread):
 				semaphore.acquire()
 				self.dispatch()
 			except BaseException, e:
-				print e
+				logger.warn(e)
 
 	def dispatch(self):
-		jobCount = self.__maxStore - self.__jobQueue.qsize()
+		jobCount = self.__maxStore - self.getJobQueueSize()
 		if jobCount > 0:
 			pushJobs = selectJob(jobCount)
-			#print pushJobs
 			self.addJobInBatch(pushJobs)
+			logger.debug("The count of jobs that push into the jobQueue: %d The size of jobQueue: %d",\
+				len(pushJobs), self.getJobQueueSize())
 		idleCount = self.getIdlePos()
 		if idleCount == 0:
 			return
@@ -121,22 +140,28 @@ class Dispatcher(Thread):
 			excutedJob = self.__retryQueue.get()
 			if excutedJob.retryTimes >= self.retryTimes:
 				excutedJob.state = 'Failed'
-				self.__failedQueue.put(excutedJob)
-				update(excutedJob, excutedJob.state)
-				if self.__failedQueue.qsize() > self.__failedCount:
-					print 'the failed Queue is full, too many failed job'
+				excutedJob = update(excutedJob, excutedJob.state)
+				self.addFailedJob(excutedJob)
+				if self.getFailedQueueSize() >= self.__failedCount:
+					logger.warn('The failed queue is full, there are %d failed jobs', self.getFailedQueueSize())
 			else:
+				cleanFiles(excutedJob)
 				if not self.excuteJob(excutedJob):
-					self.__retryQueue.put(excuteJob, 1, 2)
+					self.addRetryJob(retryJob)
+					logger.warn("Job(retry) %s excuted failed!", excutedJob.getJobName())
+					if self.getRetryQueueSize() >= self.__retryCount:
+						logger.warn("The retry queue is full, there are %d retry jobs", self.getRetryQueueSize())
 					return
 				idleCount -= 1
 		while idleCount > 0 and self.__jobQueue.qsize() > 0:
 			excutedJob = self.__jobQueue.get()
 			if not self.excuteJob(excutedJob):
 				try:
-					self.__jobQueue.put(excutedJob, 1, 2)
+					self.addJob(excutedJob)
 				except BaseException, e:
-					print 'job excutes failed, need to handle'
+					update(excutedJob, "Create")
+					logger.warn('The job queue is full, there are %d jobs', self.getJobQueueSize())
+				logger.warn("Job(normal) %s excuted failed!", excutedJob.getJobName())
 				return
 			idleCount -= 1
 
@@ -147,14 +172,18 @@ class Dispatcher(Thread):
 			if not self.__handleThreads[i].isAlive():
 				if self.__handleThreads[i].excutedJob.state == 'Retry':
 					retryJob = self.__handleThreads[i].excutedJob
-					self.__retryQueue.put(retryJob)
+					self.addRetryJob(retryJob)
+					if self.getRetryQueueSize() >= self.__retryCount:
+						logger.warn("The retry queue is full, there are %d retry jobs", self.getRetryQueueSize())
 				finishedThreads.append(self.__handleThreads[i])
 				idleCount += 1
 			elif self.__handleThreads[i].excutedJob.isOverTime():
+				self.__handleThreads[i].join()
 				self.__handleThreads[i].excutedJob[i].excutedJob.finishTime = datetime.datetime.now()
 				retryJob = update(self.__handleThreads[i].excutedJob, 'Retry', True)
-				self.__retryQueue.put(retryJob)
-				self.__handleThreads[i].join()
+				self.addRetryJob(retryJob)
+				if self.getRetryQueueSize() >= self.__retryCount:
+					logger.warn("The retry queue is full, there are %d retry jobs", self.getRetryQueueSize())
 				finishedThreads.append(self.__handleThreads[i])
 				idleCount += 1
 		for finishedThread in finishedThreads:
@@ -168,12 +197,6 @@ class Dispatcher(Thread):
 		self.__handleThreads[-1].start()
 		return True
 
-	def addFailedJob(self, job):
-		self.__failedQueue.put(job)
-
-	def addRetryJob(self, job):
-		self.__retryQueue.put(job)
-
 	#todo need to test
 	def addJobInBatch(self, jobs):
 		for job in jobs:
@@ -182,6 +205,7 @@ class Dispatcher(Thread):
 				self.__jobQueue.put(job,1,1)
 			except BaseException, e:
 				job.state = 'Create'
+				logger.warn(e)
 				break
 			commit(job)
 
@@ -196,6 +220,7 @@ class Dispatcher(Thread):
 				jobConfig.job_id = job.id
 				insert(jobConfig)
 		except BaseException, e:
+			logger.warn(e)
 			return False
 		global semaphore
 		semaphore.release()
@@ -205,6 +230,24 @@ class Dispatcher(Thread):
 	def cleanJob(self):
 		global semaphore
 		semaphore.release()
+
+	def addFailedJob(self, job):
+		self.__failedQueue.put(job, 1, 2)
+
+	def addRetryJob(self, job):
+		self.__retryQueue.put(job, 1, 2)
+
+	def addJob(self, job):
+		self.__jobQueue.put(job, 1, 2)
+
+	def getJobQueueSize(self):
+		return self.__jobQueue.qsize()
+
+	def getRetryQueueSize(self):
+		return self.__retryQueue.qsize()
+
+	def getFailedQueueSize(self):
+		return self.__failedQueue.qsize()
 
 	@property
 	def running(self):
@@ -286,8 +329,7 @@ class Dispatcher(Thread):
 	def setHandleThreads(self, handleThreads):
 		self.__handleThreads = handleThreads
 
-	'''
-	def submitJob(self, job):
+	def submitJobInQueue(self, job):
 		"""
 		the api used to submit job here is the return value's instruction:
 		-1: the waitiing Job Queue is full!
@@ -312,4 +354,3 @@ class Dispatcher(Thread):
 		except BaseException, e:
 			print e
 			return 1
-		'''
