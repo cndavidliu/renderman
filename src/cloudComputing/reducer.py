@@ -1,7 +1,8 @@
-#! /usr/bin/env python
+	#! /usr/bin/env python
 import sys
 import Image
 import os
+
 from config import hdfsFolder
 
 '''

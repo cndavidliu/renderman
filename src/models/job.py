@@ -7,7 +7,7 @@ import os
 jobTypes = ['Render', 'Fair']
 jobStates = ['Create', 'Wait', 'Running', 'Failed', 'Success', 'Retry', 'Killed']
 resultFileSuffix = ['.png', '.obj']
-resultFloder = ['/img/', '/obj/']
+resultFloder = ['/img/', '/']
 
 class Job(Model):
 	"""
@@ -79,7 +79,7 @@ class Job(Model):
 
 	def getResultName(self):
 		global resultFileSuffix
-		return self.getJobName() + resultFileSuffix[0] 
+		return self.getJobName() + resultFileSuffix[self.jobType] 
 
 	def getJobType(self):
 		global jobTypes
@@ -95,6 +95,12 @@ class Job(Model):
 
 	def isRender(self):
 		return self.jobType == 0
+
+	def isTest(self):
+		return self.jobType == -1
+
+	def isFair(self):
+		return self.jobType == 1
 
 	def isKilled(self):
 		global jobStates

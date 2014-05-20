@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Sequence, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, Sequence, String, DateTime, ForeignKey, Float
 from sqlalchemy.orm import relationship, backref
 from .meta import Model
 
@@ -12,13 +12,18 @@ class Config(Model):
 	id = Column(Integer, Sequence('config_id_seq'), primary_key = True)
 
 	#config info
-	instanceMem = Column(Integer, default = 200)
+	instanceMem = Column(Integer, default = 2)
 	instanceCores = Column(Integer, default = 6)
 
 	#parameters for rendering
 	mapTaskCount = Column(Integer)
 	height = Column(Integer)
 	width = Column(Integer)
+	
+	#parameters for fairing
+	repeatTimes = Column(Integer)
+	objLambda = Column(Float)
+
 
 	extraConfig = Column(String(255), default = '')
 
@@ -38,6 +43,13 @@ class Config(Model):
 		self.width = width
 		self.height = height
 
-	def __init__(self, instanceMem = 200, instanceCores = 6):
+	def __init__(self, instanceMem = 2, instanceCores = 6):
 		self.instanceMem = instanceMem
 		self.instanceCores = instanceCores
+
+	def getFairConfig(self):
+		return self.objLambda, self.repeatTimes
+
+	def setFairConfig(self, objLambda, repeatTimes):
+		self.objLambda = objLambda
+		self.repeatTimes = repeatTimes

@@ -4,7 +4,8 @@ from sqlalchemy import or_, and_, desc
 from werkzeug.utils import secure_filename
 import os
 
-from .config import overTimes, SERVER_IP, DATABASE_URL, mapTaskCounts, pixels, maxStore, threadCount, failedCount, retryCount, ALLOWED_EXTENSIONS, serverFolder, redirectCommand, downloadFolder, relativeDownloadFolder
+from .config import overTimes, SERVER_IP, DATABASE_URL, mapTaskCounts, pixels, maxStore, threadCount, failedCount, retryCount, ALLOWED_EXTENSIONS, \
+serverFolder, redirectCommand, downloadFolder, relativeDownloadFolder, memorys, cores, repeatTimes, objLambdas
 from .models import meta, user, job, config
 from ..test.clean import cleanDatabase
 from .jobManager import jobManager, dbManager
@@ -24,10 +25,10 @@ def init():
 	manager = jobManager.JobManager(maxStore, threadCount, failedCount, retryCount)
 	manager.start()
 
-def checkFile(filename):
+def checkFile(filename, jobType):
 	if '.' in filename:
 		fileSuffix = filename.rsplit('.', 1)[1]
-		if fileSuffix in ALLOWED_EXTENSIONS:
+		if fileSuffix == ALLOWED_EXTENSIONS[jobType]:
 			return fileSuffix
 	return None
 
@@ -223,7 +224,8 @@ def createProject():
 	userId = int(session['userid'])
 	if request.method == 'GET':
 		return render_template('createProject.html', userName = userName, userId = userId, \
-			mapTaskCounts = mapTaskCounts, pixels = pixels, overTimes = overTimes)
+			mapTaskCounts = mapTaskCounts, pixels = pixels, overTimes = overTimes, memorys = memorys, cores = cores, \
+			repeatTimes = repeatTimes, objLambdas = objLambdas)
 	if request.method == 'POST':
 		jobName = ''
 		sourceFile = None
@@ -254,14 +256,16 @@ def createProject():
 			errorMessage[1] = "Source file is necessary!"
 			flag = True
 		else: 
-			fileSuffix = checkFile(sourceFile.filename)
+			fileSuffix = checkFile(sourceFile.filename, jobType)
 			if not fileSuffix:
 				errorMessage[1] = "Source file's type is illegal!"
 				flag = True
 		if flag:		
 			return render_template('createProject.html', userName = userName, userId = userId, jobName = jobName, description = description, \
 				jobType = jobType, mapTaskCount = mapTaskCount, overTime = overTime, pixel = request.form['pixel'], \
-				mapTaskCounts = mapTaskCounts, pixels = pixels, errorMessage = errorMessage, overTimes = overTimes)
+				mapTaskCounts = mapTaskCounts, pixels = pixels, errorMessage = errorMessage, overTimes = overTimes, \
+				repeatTime = request.form['times'], objLambda = request.form['lambda'], memorys = memorys, cores = cores, \
+				repeatTimes = repeatTimes, objLambdas = objLambdas, memory = request.form['memory'], core = request.form['core'])
 		else:
 			newJob = job.Job(jobName, sourceFile.filename, jobType)
 			newJob.user_id = userId
@@ -269,11 +273,12 @@ def createProject():
 			sourceFilePath = serverFolder + userName + '/' + newJob.getJobName() + '.' + fileSuffix
 			newJob.sourceFile = sourceFilePath
 			sourceFile.save(sourceFilePath)
-			#jobConfig = config.Config(int(request.form['memory']), int(request.form['cores']))
-			jobConfig = config.Config()
+			jobConfig = config.Config(int(request.form['memory']), int(request.form['core']))
 			if jobType == 0:
 				pixelInfo = getPixel(request.form['pixel'])
 				jobConfig.setRenderConfig(mapTaskCount, pixelInfo[0], pixelInfo[1])
+			elif jobType == 1:
+				jobConfig.setFairConfig(float(request.form['lambda']), int(request.form['times']))
 			# submit job
 			global manager
 			manager.submitJob(newJob, jobConfig)

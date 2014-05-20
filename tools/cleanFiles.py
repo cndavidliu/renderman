@@ -12,7 +12,7 @@ def initDb():
 	#meta.init_db()
 
 def cleanJobFiles(job):
-	if job.getJobType() == 'Render':
+	if job.isRender():
 		jobName = job.getJobName()
 		os.system("hadoop fs -rmr " + jobName)
 		# here the input suffix needs to change to config file maybe
@@ -23,6 +23,12 @@ def cleanJobFiles(job):
 			cleanOutput = ('''ssh %s "rm -rf %s%s-output"''') % (hostName, hdfsFolder, jobName)
 			os.system(cleanCommand)
 			os.system(cleanOutput)
+	elif job.isFair():
+		jobName = job.getJobName()
+		os.system("hadoop fs -rmr " + jobName)
+		os.system('rm -rf ' + hdfsFolder + jobName)
+		os.system('rm -rf ' + hdfsLogFolder + jobName + '.log')
+
 
 def cleanUserFiles(user):
 	userName = user.name

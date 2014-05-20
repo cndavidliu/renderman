@@ -108,28 +108,24 @@
             </ul>
           </div>
           <div class="row" style="height: 30px;"></div>
-          <fieldset disabled>
-            <div class="form-group">
-              <label for="inputMem" class="col-sm-3 control-label">Memory</label>
-              <div class="col-sm-3">
-                <select class="form-control" name="memory" id="inputMem">
-                  <option name="memory" value="200" {% if memory==200 %} selected="selected" {% endif %}>200M</option>
-                  <option name="memory" value="512" {% if memory==512 %} selected="selected" {% endif %}>512M</option>
-                  <option name="memory" value="1024" {% if memory==1024 %} selected="selected" {% endif %}>1024M</option>
-                  <option name="memory" value="2048" {% if memory==2048 %} selected="selected" {% endif %}>2G</option>                  
-                  <option name="memory" value="4096" selected="selected">4G</option>
-                </select>
-              </div>
-              <label for="inputCores" class="col-sm-1 control-label">Cores</label>
-              <div class="col-sm-3">
-                <select class="form-control" name="cores" id="inputCores">
-                  <option name="cores" value="4" {% if cores==4 %} selected="selected" {% endif %}>4</option>
-                  <option name="cores" value="8" {% if cores==8 %} selected="selected" {% endif %}>8</option>
-                  <option name="cores" value="12" {% if cores==12 %} selected="selected" {% endif %}>12</option>
-                </select>
-              </div>
+          <div class="form-group">
+            <label for="inputMem" class="col-sm-3 control-label">Memory</label>
+            <div class="col-sm-3">
+              <select class="form-control" name="memory" id="inputMem">
+                {% for i in memorys %}
+                <option value="{{ i }}" name="memory" {% if memory==i %} selected="selected" {% endif %}>{{ i }}</option>
+                {% endfor %}
+              </select>
             </div>
-          </fieldset>
+            <label for="inputCores" class="col-sm-1 control-label">Cores</label>
+            <div class="col-sm-3">
+              <select class="form-control" name="core" id="inputCores">
+                {% for i in cores %}
+                <option value="{{ i }}" name="core" {% if core==i %} selected="selected" {% endif %}>{{ i }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
           <div class="row" style="height: 40px;"></div>
           <div class="row">
             <ul class="nav nav-tabs">
@@ -151,6 +147,30 @@
               <select class="form-control" name="pixel" id="inputPixel">
                 {% for choosePixel in pixels %}
                 <option name="pixel" value="{{ choosePixel }}" {% if choosePixel==pixel %} selected="selected" {% endif %}>{{ choosePixel }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <ul class="nav nav-tabs">
+              <li class="active"><a href="{{url_for('createProject')}}">Fair Config</a></li>
+            </ul>
+          </div>
+          <div class="row" style="height: 30px;"></div>
+          <div class="form-group">
+            <label for="inputMapCount" class="col-sm-3 control-label">Lambda</label>
+            <div class="col-sm-3">
+              <select class="form-control" name="lambda" id="inputLambda">
+                {% for i in objLambdas %}
+                <option value="{{ i }}" name="lambda" {% if objLambda==i %} selected="selected" {% endif %}>{{ i }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <label for="inputPixel" class="col-sm-1 control-label">Times</label>
+            <div class="col-sm-3">
+              <select class="form-control" name="times" id="inputTime">
+                {% for i in repeatTimes %}
+                <option name="times" value="{{ i }}" {% if i==repeatTime %} selected="selected" {% endif %}>{{ i }}</option>
                 {% endfor %}
               </select>
             </div>

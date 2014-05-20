@@ -5,9 +5,9 @@ import os
 import datetime
 
 from .dbManager import checkJob, insert, selectJob, update, commit
-from ..cloudComputing.config import hdfsLogFolder
+from ..cloudComputing.config import hdfsLogFolder, fairFile, renderFile, beforeFairFile, afterFairFile
 from .config import systemLogFolder, logKeyWord, systemLogConf
-from .fileManager import cleanFiles
+from .fileManager import cleanFiles, isFileExist
 import logging
 import logging.config
 
@@ -58,22 +58,33 @@ class JobExcutor(Thread):
 
 	def getCommand(self):
 		command = ''
-		if self.__excutedJob.jobType == -1:
+		jobName = self.__excutedJob.getJobName()
+		povFileName = self.__excutedJob.name
+		#print self.__excutedJob.getConfig()
+		jobConfig = self.__excutedJob.getConfig()
+		height = jobConfig.height
+		width = jobConfig.width
+		mapTaskCount = jobConfig.mapTaskCount
+		srcFile = self.__excutedJob.sourceFile
+
+		jobMem = jobConfig.instanceMem
+		jobCores = jobConfig.instanceCores
+		repeatTimes = jobConfig.repeatTimes
+		objLambda = jobConfig.objLambda
+
+		if self.__excutedJob.isTest():
 			command = command + 'ls -l'
 			return command
-		elif self.__excutedJob.jobType == 1:
-			command = command + 'fair'
+		elif self.__excutedJob.isFair():
+			os.system('python ' + beforeFairFile + ' ' + srcFile)
+			logFile = hdfsLogFolder + jobName + '.log'
+			redirectCommand = '>>' + logFile + ' 2>>' + logFile
+			command = 'pyspark %s %s %s %s %s %.3f %d %s' % \
+			(fairFile, jobName, jobCores, jobMem, srcFile, objLambda, repeatTimes, redirectCommand)
 			return command
-		elif self.__excutedJob.jobType == 0:
-			jobName = self.__excutedJob.getJobName()
-			povFileName = self.__excutedJob.name
-			#print self.__excutedJob.getConfig()
-			mapTaskCount = self.__excutedJob.getConfig().mapTaskCount
-			height = self.__excutedJob.getConfig().height
-			width = self.__excutedJob.getConfig().width
-			srcFile = self.__excutedJob.sourceFile
-			command = "python /home/mfkiller/code/spark_cloud/src/cloudComputing/render.py %s %s %d %d %d %s" % \
-			(jobName, povFileName, mapTaskCount, width, height, srcFile)
+		elif self.__excutedJob.isRender():
+			command = "python %s %s %s %d %d %d %s" % \
+			(renderFile, jobName, povFileName, mapTaskCount, width, height, srcFile)
 			return command
 
 	def rmLog(self):
@@ -84,7 +95,8 @@ class JobExcutor(Thread):
 		"""
 		use log detection to check job state need to change or fix
 		"""
-		jobLogFile = hdfsLogFolder + self.__excutedJob.getJobName() + '.log'
+		jobName = self.__excutedJob.getJobName()
+		jobLogFile = hdfsLogFolder + jobName + '.log'
 		jobLog = open(jobLogFile, 'r')
 		logContent = jobLog.readlines()
 		keyword = logKeyWord[self.__excutedJob.jobType]
@@ -94,6 +106,12 @@ class JobExcutor(Thread):
 				return False
 			else:
 				return True
+		elif self.__excutedJob.isFair():
+			if isFileExist(jobName):
+				os.system('python ' + afterFairFile + ' ' + jobName)
+				return True
+			else:
+				return False
 
 
 class Dispatcher(Thread):
