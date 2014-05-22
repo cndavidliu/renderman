@@ -77,7 +77,9 @@
             <div class="col-sm-2">
               <select class="form-control" name="jobType" id = "inputType">
                 <option name="jobType" value="0" {% if jobType==0 %} selected="selected" {% endif %}>Render</option>
+                {% if not isFairing %}
                 <option name="jobType" value="1" {% if jobType==1 %} selected="selected" {% endif %}>Fair</option>
+                {% endif %}
               </select>
             </div>
           </div>

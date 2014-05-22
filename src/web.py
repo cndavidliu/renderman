@@ -222,10 +222,16 @@ def createProject():
 		return redirect(url_for('login'))
 	userName = session['username']
 	userId = int(session['userid'])
+	isFairing = False
+	#maybe need to change 
+	runningFairJobs = job.Job.query.filter(and_(job.Job.state == job.jobStates[2], \
+		job.Job.user_id == userId, job.Job.jobType == 1)).count()
+	if runningFairJobs > 0:
+		isFairing = True
 	if request.method == 'GET':
 		return render_template('createProject.html', userName = userName, userId = userId, \
 			mapTaskCounts = mapTaskCounts, pixels = pixels, overTimes = overTimes, memorys = memorys, cores = cores, \
-			repeatTimes = repeatTimes, objLambdas = objLambdas)
+			repeatTimes = repeatTimes, objLambdas = objLambdas, isFairing = isFairing)
 	if request.method == 'POST':
 		jobName = ''
 		sourceFile = None
@@ -265,7 +271,8 @@ def createProject():
 				jobType = jobType, mapTaskCount = mapTaskCount, overTime = overTime, pixel = request.form['pixel'], \
 				mapTaskCounts = mapTaskCounts, pixels = pixels, errorMessage = errorMessage, overTimes = overTimes, \
 				repeatTime = request.form['times'], objLambda = request.form['lambda'], memorys = memorys, cores = cores, \
-				repeatTimes = repeatTimes, objLambdas = objLambdas, memory = request.form['memory'], core = request.form['core'])
+				repeatTimes = repeatTimes, objLambdas = objLambdas, memory = request.form['memory'], core = request.form['core'], \
+				isFairing = isFairing)
 		else:
 			newJob = job.Job(jobName, sourceFile.filename, jobType)
 			newJob.user_id = userId
